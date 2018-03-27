@@ -80,17 +80,17 @@ namespace safe
 		DISALLOW_COPY_AND_ASSIGN(condition_variable);
 	};
 
-	class RwLock{
+	class RwLock {
 	public:
-		RwLock(){
+		RwLock() {
 			CHECK(pthread_rwlock_init(&_lock, NULL) == 0);
 		}
 
-		~RwLock(){
+		~RwLock() {
 			CHECK(pthread_rwlock_destroy(&_lock) == 0);
 		}
 
-		void read_lock(){
+		void read_lock() {
 			int err = pthread_rwlock_rdlock(&_lock);
 			CHECK_EQ(err, 0) << ::strerror(err);
 		}
@@ -100,16 +100,16 @@ namespace safe
 			CHECK_EQ(err, 0) << ::strerror(err);
 		}
 
-		void unlock(){
+		void unlock() {
 			int err = pthread_rwlock_unlock(&_lock);
 			CHECK_EQ(err, 0) << ::strerror(err);
 		}
 
-		bool try_read_lock(){
+		bool try_read_lock() {
 			return pthread_rwlock_tryrdlock(&_lock) == 0;
 		}
 
-		bool try_write_lock(){
+		bool try_write_lock() {
 			return pthread_rwlock_trywrlock(&_lock) == 0;
 		}
 	private:
@@ -119,48 +119,44 @@ namespace safe
 	};
 
 
-	class MutexGuard{
+	class MutexGuard {
 	public:
-		explicit MutexGuard(Mutex &mutex):
-		_mutex(mutex){
+		explicit MutexGuard(Mutex &mutex)
+			: _mutex(mutex) {
 			_mutex.lock();
 		}
 
-		~MutexGuard(){
+		~MutexGuard() {
 			_mutex.unlock();
 		}
 	private:
-		MutexGuard(const MutexGuard &);
-		void operator=(const MutexGuard &);
-
 		Mutex &_mutex;
+		DISALLOW_COPY_AND_ASSIGN(MutexGuard);
 	};
 
-	class ReadLockGuard{
+	class ReadLockGuard {
 	public:
 		explicit ReadLockGuard(RwLock &rwlock)
-			:_rwLock(rwlock){
+			:_rwLock(rwlock) {
 			_rwLock.read_lock();
 		}
 
-		~ReadLockGuard(){
+		~ReadLockGuard() {
 			_rwLock.unlock();
 		}
 	private:
-		ReadLockGuard(const ReadLockGuard &);
-		void operator=(const ReadLockGuard &);
-
 		RwLock &_rwLock;
+		DISALLOW_COPY_AND_ASSIGN(ReadLockGuard);
 	};
 
-	class WriteLockGuard{
+	class WriteLockGuard {
 	public:
 		explicit WriteLockGuard(RwLock &rwlock)
-			:_rwLock(rwlock){
+			:_rwLock(rwlock) {
 			_rwLock.write_lock();
 		}
 
-		~WriteLockGuard(){
+		~WriteLockGuard() {
 			_rwLock.unlock();
 		}
 	private:
@@ -175,23 +171,23 @@ namespace safe
 #define atomic_compare_swap __sync_val_compare_and_swap
 
 
-	class SpinLock{
+	class SpinLock {
 	public:
-		explicit SpinLock():_locked(false){
+		explicit SpinLock() :_locked(false) {
 		}
 
-		~SpinLock(){}
+		~SpinLock() {}
 
 
-		bool try_lock(){
-			return atomic_swap(&_locked,true) == false;
+		bool try_lock() {
+			return atomic_swap(&_locked, true) == false;
 		}
 
-		void lock(){
-			while(!this->try_lock());
+		void lock() {
+			while (!this->try_lock());
 		}
 
-		void unlock(){
+		void unlock() {
 			atomic_release(&_locked);
 		}
 	private:
@@ -200,14 +196,14 @@ namespace safe
 		DISALLOW_COPY_AND_ASSIGN(SpinLock);
 	};
 
-	class SpinLockGuard{
+	class SpinLockGuard {
 	public:
-		SpinLockGuard(SpinLock &lock)
-			:_lock(lock){
+		explicit SpinLockGuard(SpinLock &lock)
+			:_lock(lock) {
 			_lock.lock();
 		}
 
-		~SpinLockGuard(){
+		~SpinLockGuard() {
 			_lock.unlock();
 		}
 	private:
@@ -216,49 +212,50 @@ namespace safe
 		DISALLOW_COPY_AND_ASSIGN(SpinLockGuard);
 	};
 
-
-	class SyncEvent{
+	// for single producer-consumer
+	class SyncEvent {
 	public:
-		explicit SyncEvent(bool manual_reset=false,bool signaled=false)
-			:_manual_reset(manual_reset),_signaled(signaled){
+		explicit SyncEvent(bool manual_reset = false, bool signaled = false)
+			:_manual_reset(manual_reset), _signaled(signaled) {
 			pthread_condattr_t	attr;
 			CHECK(pthread_condattr_init(&attr) == 0);
-			CHECK(pthread_condattr_setclock(&attr,CLOCK_MONOTONIC) == 0);
-			CHECK(pthread_cond_init(&_cond,&attr) == 0);
+			CHECK(pthread_condattr_setclock(&attr, CLOCK_MONOTONIC) == 0);
+			CHECK(pthread_cond_init(&_cond, &attr) == 0);
 			CHECK(pthread_condattr_destroy(&attr) == 0);
 		}
 
-		~SyncEvent(){
+		~SyncEvent() {
 			CHECK(pthread_cond_destroy(&_cond) == 0);
 		}
 
-		void signal(){
+		void signal() {
 			MutexGuard g(_mutex);
-			if (!_signaled){
+			if (!_signaled) {
 				_signaled = true;
 				pthread_cond_broadcast(&_cond);
 			}
 		}
 
-		void reset(){
+		void reset() {
 			MutexGuard g(_mutex);
 			_signaled = false;
 		}
 
-		bool is_signaled(){
+		bool is_signaled() {
 			MutexGuard g(_mutex);
 			return _signaled;
 		}
 
-		void wait(){
+		void wait() {
 			MutexGuard g(_mutex);
-			if(!_signaled){
+			if (!_signaled) {
 				pthread_cond_wait(&_cond, _mutex.mutex());
 				CHECK(_signaled);
 			}
-			if(!_manual_reset)	_signaled = false;//(»Áπ˚Œ™◊‘∂Ø÷ÿ÷√£¨‘ÚΩ´–≈∫≈÷ÿ÷√)
+			if (!_manual_reset)	_signaled = false;//(Â¶ÇÊûú‰∏∫Ëá™Âä®ÈáçÁΩÆÔºåÂàôÂ∞Ü‰ø°Âè∑ÈáçÁΩÆ)
 		}
 
+		// return false if timeout
 		bool timed_wait(uint32 ms);
 
 	private:
@@ -272,39 +269,39 @@ namespace safe
 	};
 
 	/************************************************************************/
-	/* 
+	/*
 	bool __sync_bool_compare_and_swap (type *ptr, type oldval type newval, ...)
 	type __sync_val_compare_and_swap (type *ptr, type oldval type newval, ...)
-	These builtins perform an atomic compare and swap. That is, if the current value of *ptr is oldval, 
+	These builtins perform an atomic compare and swap. That is, if the current value of *ptr is oldval,
 	then write newval into *ptr.
 	*/
 	/************************************************************************/
-	class Thread{
+	class Thread {
 	public:
-		explicit Thread(boost::function<void ()> fun)
-		: _fun(fun), _tid(0){
-		
+		explicit Thread(boost::function<void()> fun)
+			: _fun(fun), _tid(0) {
+
 		}
 
-		~Thread(){}
+		~Thread() {}
 
-		bool start(){
-		 if (atomic_compare_swap(&_tid, 0, 1) != 0) return true;
-		 return pthread_create(&_tid,NULL,&Thread::thread_fun,&_fun);
+		bool start() {
+			if (atomic_compare_swap(&_tid, 0, 1) != 0) return true;
+			return pthread_create(&_tid, NULL, &Thread::thread_fun, &_fun) == 0;
 		}
 
-		void join(){
-			pthread_t id = atomic_swap(&_tid,0);
+		void join() {
+			pthread_t id = atomic_swap(&_tid, 0);
 			if (id != 0) pthread_join(id, NULL);
 		}
-		
-		void detach(){
-			pthread_t id = atomic_swap(&_tid,0);
+
+		void detach() {
+			pthread_t id = atomic_swap(&_tid, 0);
 			if (id != 0) pthread_detach(id);
 		}
 
-		void cancel(){
-			pthread_t id = atomic_swap(&_tid,0);
+		void cancel() {
+			pthread_t id = atomic_swap(&_tid, 0);
 			if (id != 0) {
 				pthread_cancel(id);
 				pthread_join(id, NULL);
@@ -316,10 +313,10 @@ namespace safe
 		}
 
 	private:
-		boost::function<void ()>	_fun;
+		boost::function<void()>	_fun;
 		pthread_t	_tid;
 
-		static void *thread_fun(void *p){
+		static void *thread_fun(void *p) {
 			boost::function<void()> f = *((boost::function<void()>*) p);
 			f();
 			return NULL;
@@ -329,41 +326,99 @@ namespace safe
 	};
 
 
-	class StoppableThread : public Thread{
+	class StoppableThread : public Thread {
 	public:
-		explicit StoppableThread(boost::function<void ()> fun,uint32 ms)
+		explicit StoppableThread(boost::function<void()> fun, uint32 ms)
 			: Thread(boost::bind(&StoppableThread::thread_fun, this)),
-			_fun(fun), m_ms(ms), m_stop(false){
+			_fun(fun), m_ms(ms), m_stop(false) {
 		}
 
-		~StoppableThread(){}
+		~StoppableThread() {}
 
-		void join(){
-			if(atomic_swap(&m_stop, true) == false){
+		void join() {
+			if (atomic_swap(&m_stop, true) == false) {
 				_ev.signal();
 				Thread::join();
 			}
 		}
 
-		void notify(){
+		void notify() {
 			_ev.signal();
 		}
 
 	private:
 		SyncEvent _ev;
-		boost::function<void ()>	_fun;
+		boost::function<void()>	_fun;
 
 		uint32 m_ms;
 		bool m_stop;
 
-		void thread_fun(){
-			while(!m_stop){
-				_ev.timed_wait(m_ms);	//Ω” ‹µΩ–≈∫≈÷¥––“ª¥Œ,∑Ò‘ÚÀØ√ﬂµ»¥˝≥¨ ±∫ÛºÃ–¯÷¥––
-				if(!m_stop) _fun();//≤ªπÿ±’µƒª∞‘Ú÷¥––œﬂ≥Ã∫Ø ˝
+		void thread_fun() {
+			while (!m_stop) {
+				_ev.timed_wait(m_ms);	//Êé•ÂèóÂà∞‰ø°Âè∑ÊâßË°å‰∏ÄÊ¨°,Âê¶ÂàôÁù°Áú†Á≠âÂæÖË∂ÖÊó∂ÂêéÁªßÁª≠ÊâßË°å
+				if (!m_stop) _fun();//‰∏çÂÖ≥Èó≠ÁöÑËØùÂàôÊâßË°åÁ∫øÁ®ãÂáΩÊï∞
 			}
 		}
 
 		DISALLOW_COPY_AND_ASSIGN(StoppableThread);
+	};
+
+	template<typename T>
+	class ThreadSafe {
+	public:
+		ThreadSafe() {}
+		virtual ~ThreadSafe() {}
+
+		typedef pthread_t Key;
+		typedef boost::shared_ptr<T> Value;
+
+		Value current() {
+			Value t = this->get();
+			if (t != NULL) return t;
+
+			t = Value(this->create());
+			CHECK_NOTNULL(t);
+			this->set(t);
+			return t;
+		}
+
+		boost::shared_ptr<T> operator->() {
+			return this->current();
+		}
+
+	protected:
+		virtual T* create() = 0;
+
+		Value get() const {
+			ReadLockGuard l(_rw_lock);
+			boost::shared_ptr<T> it = _map.find(::pthread_self());
+			if (it == _map.end()) return Value();
+			return it->second;
+		}
+
+		void set(Value val) {
+			pthread_t key = ::pthread_self();
+			WriteLockGuard l(_rw_lock);
+			if (_map.find(key) == _map.end()) {
+				_map[key] = val;
+			}
+		}
+
+		void erase(Key key) {
+			WriteLockGuard l(_rw_lock);
+			_map.erase(key);
+		}
+
+		void clear() {
+			WriteLockGuard l(_rw_lock);
+			_map.clear();
+		}
+
+	private:
+		mutable RwLock _rw_lock;
+		std::map<Key, Value> _map;
+
+		DISALLOW_COPY_AND_ASSIGN(ThreadSafe);
 	};
 
 }

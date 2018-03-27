@@ -14,6 +14,7 @@
 #include <boost/smart_ptr.hpp>
 #include <boost/function.hpp>
 
+DEF_bool(stop_server, false, "stop running server");
 DEF_bool(log2stderr, false, "log to stderr only");
 DEF_bool(alsolog2stderr, false, "log to stderr and file");
 DEF_bool(dlog_on, false, "if true, turn on DLOG");
@@ -27,7 +28,7 @@ namespace xx {
 
 static std::string kProgName = os::get_process_name();
 
-//ÈÕÖ¾Æ÷µÄĞé»ùÀà
+//æ—¥å¿—å™¨çš„è™šåŸºç±»
 class Logger {
   public:
     explicit Logger(uint32 ms);
@@ -78,7 +79,7 @@ std::string Logger::_log_prefix;
 Logger::Logger(uint32 ms)
     : _ms(ms) {
     _log_thread.reset(
-        new safe::StoppableThread(boost::bind(&Logger::thread_fun, this), _ms));//´´½¨Ò»¸ö¶¨Ê±ÔËĞĞÇÒ¿ÉÍ£Ö¹µÄÏß³Ì
+        new safe::StoppableThread(boost::bind(&Logger::thread_fun, this), _ms));//åˆ›å»ºä¸€ä¸ªå®šæ—¶è¿è¡Œä¸”å¯åœæ­¢çš„çº¿ç¨‹
     _log_thread->start();
 
     int64 sec = sys::local_time.sec();
@@ -86,33 +87,34 @@ Logger::Logger(uint32 ms)
     _last_hour = sec / 3600;
 }
 
-//¶¨Ê±ÔËĞĞ¸Ã¹¤×÷º¯Êı
+//å®šæ—¶è¿è¡Œè¯¥å·¥ä½œå‡½æ•°
 void Logger::thread_fun() {
     {
         safe::MutexGuard g(_log_mtx);
-        if (!_logs.empty()) _logs.swap(_temp);//½«Êı¾İ½»»»µ½ÁíÒ»¿éÄÚ´æ
+        if (!_logs.empty()) _logs.swap(_temp);//å°†æ•°æ®äº¤æ¢åˆ°å¦ä¸€å—å†…å­˜
     }
 
-    this->write_logs(_temp);//½«½»»»³öµÄÊı¾İĞ´Èëµ½¸÷ÈÕÖ¾ÀàĞÍµÄ´æ´¢Æ÷
+    this->write_logs(_temp);//å°†äº¤æ¢å‡ºçš„æ•°æ®å†™å…¥åˆ°å„æ—¥å¿—ç±»å‹çš„å­˜å‚¨å™¨
     _temp.clear();
 
-    if (_temp.capacity() > 1024) {//»ØÊÕÁÙÊ±ÄÚ´æÇøÓò
+    if (_temp.capacity() > 1024) {//å›æ”¶ä¸´æ—¶å†…å­˜åŒºåŸŸ
         std::vector<void*>().swap(_temp);
         _temp.reserve(1024);
     }
 
-    this->flush_log_files();//½«¸÷ÖÖÀàĞÍÈÕÖ¾Ğ´Èëµ½ÈÕÖ¾ÎÄ¼ş
+    this->flush_log_files();//å°†å„ç§ç±»å‹æ—¥å¿—å†™å…¥åˆ°æ—¥å¿—æ–‡ä»¶
 }
 
 void Logger::stop() {
+	_log_thread->cancel();
     _log_thread->join(); // wait for logging thread
 
     safe::MutexGuard g(_log_mtx);
-    if (_logs.empty()) return;//Èç¹û»º³åÇøÀïÃ»ÓĞÊı¾İÔòÖ±½ÓÍË³ö
+    if (_logs.empty()) return;//å¦‚æœç¼“å†²åŒºé‡Œæ²¡æœ‰æ•°æ®åˆ™ç›´æ¥é€€å‡º
 
-    this->write_logs(_logs);//Èç¹ûÈÕÖ¾»º³åÇøÓĞÊı¾İ£¬½«Êı¾İĞ´Èëµ½¸÷ÀàĞÍÈÕÖ¾Æ÷
-    this->flush_log_files();//½«¸÷ÈÕÖ¾Æ÷Êı¾İĞ´ÈëÎÄ¼ş
-    _logs.clear();//ÊÍ·ÅÄÚ´æ
+    this->write_logs(_logs);//å¦‚æœæ—¥å¿—ç¼“å†²åŒºæœ‰æ•°æ®ï¼Œå°†æ•°æ®å†™å…¥åˆ°å„ç±»å‹æ—¥å¿—å™¨
+    this->flush_log_files();//å°†å„æ—¥å¿—å™¨æ•°æ®å†™å…¥æ–‡ä»¶
+    _logs.clear();//é‡Šæ”¾å†…å­˜
 }
 
 class TaggedLogger : public Logger {
@@ -153,7 +155,7 @@ class TaggedLogger : public Logger {
     virtual void write_logs(std::vector<void*>& logs);
 };
 
-//´ò¿ªÈÕÖ¾ÎÄ¼ş
+//æ‰“å¼€æ—¥å¿—æ–‡ä»¶
 bool TaggedLogger::open_log_file(const char* tag) {
     std::string time =
         sys::local_time.to_string(_strategy[tag] == 0 ? "%Y%m%d" : "%Y%m%d%H");
@@ -170,16 +172,16 @@ bool TaggedLogger::open_log_file(const char* tag) {
     return true;
 }
 
-//½«¸÷ÀàĞÍÈÕÖ¾Êı¾İĞ´Èëµ½¶ÔÓ¦ÎÄ¼ş
+//å°†å„ç±»å‹æ—¥å¿—æ•°æ®å†™å…¥åˆ°å¯¹åº”æ–‡ä»¶
 inline void TaggedLogger::log_to_file(const std::string& time, TaggedLog* log) {
-	os::file& file = _files[log->type()];//»ñÈ¡¸ÃÈÕÖ¾ÎÄ¼ş
+	os::file& file = _files[log->type()];//è·å–è¯¥æ—¥å¿—æ–‡ä»¶
     if (!file && !this->open_log_file(log->type())) return;
 
     file.write(time);
     file.write(log->data(), log->size());
 }
 
-//ÊµÏÖĞéº¯Êı(½«¸÷ÀàĞÍÈÕÖ¾Êı¾İĞ´Èëµ½¶ÔÓ¦ÎÄ¼ş)
+//å®ç°è™šå‡½æ•°(å°†å„ç±»å‹æ—¥å¿—æ•°æ®å†™å…¥åˆ°å¯¹åº”æ–‡ä»¶)
 void TaggedLogger::write_logs(std::vector<void*>& logs) {
     std::string time(sys::local_time.to_string()); // yyyy-mm-dd hh:mm:ss
 
@@ -190,7 +192,7 @@ void TaggedLogger::write_logs(std::vector<void*>& logs) {
     }
 }
 
-//½«»º³åÇøÊı¾İĞ´Èëµ½ÎÄ¼ş
+//å°†ç¼“å†²åŒºæ•°æ®å†™å…¥åˆ°æ–‡ä»¶
 void TaggedLogger::flush_log_files() {
     uint64 ms = sys::local_time.ms() + _ms;
     uint32 day = ms / (86400 * 1000);
@@ -276,13 +278,14 @@ void LevelLogger::install_failure_handler() {
 
 void LevelLogger::install_signal_handler() {
     //auto f = boost::bind(&LevelLogger::on_signal, this, boost::placeholders::_1);
-	//using namespace boost;
-	//boost::function<void(int)> f = boost::bind(&LevelLogger::on_signal, this, _1);
+	boost::function<void(int)> f = boost::bind(&LevelLogger::on_signal, this, _1);
 
-    //sys::signal.add_handler(SIGTERM, boost::bind(f, SIGTERM));
-	sys::signal.add_handler(SIGTERM, boost::bind(&LevelLogger::on_signal, this, SIGTERM), SA_RESTART | SA_ONSTACK);
-    sys::signal.add_handler(SIGQUIT, boost::bind(&LevelLogger::on_signal, this, SIGQUIT), SA_RESTART | SA_ONSTACK);
-    sys::signal.add_handler(SIGINT, boost::bind(&LevelLogger::on_signal, this, SIGINT), SA_RESTART | SA_ONSTACK);
+	sys::signal.add_handler(SIGTERM, boost::bind(f, SIGTERM));
+	sys::signal.add_handler(SIGQUIT, boost::bind(f, SIGQUIT));
+	sys::signal.add_handler(SIGINT, boost::bind(f, SIGINT));
+	//sys::signal.add_handler(SIGTERM, boost::bind(&LevelLogger::on_signal, this, SIGTERM), SA_RESTART | SA_ONSTACK);
+    //sys::signal.add_handler(SIGQUIT, boost::bind(&LevelLogger::on_signal, this, SIGQUIT), SA_RESTART | SA_ONSTACK);
+    //sys::signal.add_handler(SIGINT, boost::bind(&LevelLogger::on_signal, this, SIGINT), SA_RESTART | SA_ONSTACK);
     sys::signal.ignore(SIGPIPE);
 }
 
@@ -310,6 +313,8 @@ void LevelLogger::on_signal(int sig) {
         _files[FATAL].write(msg);
         _files[FATAL].flush();
     }
+
+	::FLG_stop_server = true;
 }
 
 bool LevelLogger::open_log_file(int level, const char* tag) {
@@ -426,7 +431,7 @@ void LevelLogger::flush_log_files() {
 }
 
 static TaggedLogger kTaggedLogger;
-static LevelLogger kLevelLogger;//¾²Ì¬ÈÕÖ¾¶ÔÏó
+static LevelLogger kLevelLogger;//é™æ€æ—¥å¿—å¯¹è±¡
 
 TaggedLogSaver::~TaggedLogSaver() {
     (*_log) << '\n';

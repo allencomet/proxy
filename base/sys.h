@@ -165,11 +165,11 @@ struct signal {
     static handler_t get_handler(int sig);
 };
 
-//µ¥Àı£ºĞÅºÅ´¦Àí¾ä±ú
+//å•ä¾‹ï¼šä¿¡å·å¤„ç†å¥æŸ„
 class signal_handler {
   public:
     static signal_handler* instance() {
-        static signal_handler sh;//¾Ö²¿¾²Ì¬±äÁ¿ÖµÖ»´´½¨Ò»´Î
+        static signal_handler sh;//å±€éƒ¨é™æ€å˜é‡å€¼åªåˆ›å»ºä¸€æ¬¡
         return &sh;
     }
 
@@ -188,17 +188,17 @@ class signal_handler {
     void handle_signal(int sig);
 
   private:
-    std::map<int, cbque> _map;//Ã¿ÖÖĞÅºÅ¶ÔÓ¦µÄ¶àÖÖĞÅºÅ»Øµ÷Ó³Éä
+    std::map<int, cbque> _map;//æ¯ç§ä¿¡å·å¯¹åº”çš„å¤šç§ä¿¡å·å›è°ƒæ˜ å°„
 
     DISALLOW_COPY_AND_ASSIGN(signal_handler);//since c++11
 };
 
-//×¢²áĞÅºÅ»Øµ÷£¨½«»Øµ÷×¢²áµ½ĞÅºÅ´¦Àí¾ä±ú£©
+//æ³¨å†Œä¿¡å·å›è°ƒï¼ˆå°†å›è°ƒæ³¨å†Œåˆ°ä¿¡å·å¤„ç†å¥æŸ„ï¼‰
 inline void signal::add_handler(int sig, boost::function<void()> cb, int flag) {
-	signal_handler::instance()->add_handler(sig, cb, flag);//×¢²áĞÅºÅ¶ÔÓ¦»Øµ÷
+	signal_handler::instance()->add_handler(sig, cb, flag);//æ³¨å†Œä¿¡å·å¯¹åº”å›è°ƒ
 }
 
-//É¾³ıĞÅºÅ»Øµ÷£¨½«»Øµ÷´ÓĞÅºÅ´¦Àí¾ä±úÖĞÉ¾³ı£©
+//åˆ é™¤ä¿¡å·å›è°ƒï¼ˆå°†å›è°ƒä»ä¿¡å·å¤„ç†å¥æŸ„ä¸­åˆ é™¤ï¼‰
 inline void signal::del_handler(int sig) {
 	signal_handler::instance()->del_handler(sig);
 }

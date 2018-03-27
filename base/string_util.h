@@ -87,13 +87,13 @@ std::string common_prefix(const std::vector<std::string>& v);
  * capitalize("aBc") ==> return "ABc"
  */
 std::string upper(const std::string& s);
-void upper_nc(std::string& s);		//¸Ä±äÔ­¶ÔÏó
+void upper_nc(std::string& s);		//æ”¹å˜åŸå¯¹è±¡
 
 std::string lower(const std::string& s);
-void lower_nc(std::string& s);		//¸Ä±äÔ­¶ÔÏó
+void lower_nc(std::string& s);		//æ”¹å˜åŸå¯¹è±¡
 
 std::string swapcase(const std::string& s);
-void swapcase_nc(std::string& s);	//¸Ä±äÔ­¶ÔÏó
+void swapcase_nc(std::string& s);	//æ”¹å˜åŸå¯¹è±¡
 
 inline std::string capitalize(const std::string& s) {
     std::string v(s);
@@ -101,9 +101,9 @@ inline std::string capitalize(const std::string& s) {
     return v;
 }
 
-//·µ»ØÃ¿¸öºº×ÖÆ´ÒôÊ×¸ö×ÖÄ¸£ºÄ¬ÈÏÎª·µ»ØĞ¡Ğ´×Ö·û´®,×îºóÒ»¸ö²ÎÊı´«true·µ»Ø´óĞ´×Ö·û´®£¨eg. £©
+//è¿”å›æ¯ä¸ªæ±‰å­—æ‹¼éŸ³é¦–ä¸ªå­—æ¯ï¼šé»˜è®¤ä¸ºè¿”å›å°å†™å­—ç¬¦ä¸²,æœ€åä¸€ä¸ªå‚æ•°ä¼ trueè¿”å›å¤§å†™å­—ç¬¦ä¸²ï¼ˆeg. ï¼‰
 std::string get_ab_pinyin(const std::string &strName,bool upper=false);
-//·µ»ØËùÓĞºº×ÖÆ´Òô×ÖÄ¸£ºÄ¬ÈÏÎª·µ»ØĞ¡Ğ´×Ö·û´®,×îºóÒ»¸ö²ÎÊı´«true·µ»Ø´óĞ´×Ö·û´®
+//è¿”å›æ‰€æœ‰æ±‰å­—æ‹¼éŸ³å­—æ¯ï¼šé»˜è®¤ä¸ºè¿”å›å°å†™å­—ç¬¦ä¸²,æœ€åä¸€ä¸ªå‚æ•°ä¼ trueè¿”å›å¤§å†™å­—ç¬¦ä¸²
 void get_full_pinyin(unsigned char* Chinese, std::string& PinYin,bool upper=false);
 
 /***  throw string exception on any error  ***/

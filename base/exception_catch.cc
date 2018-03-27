@@ -10,7 +10,7 @@ namespace exception_catch {
 		char cmd[1024] = "addr2line -C -f -e ";
 		char* prog = cmd + strlen(cmd);
 		::readlink("/proc/self/exe", prog, sizeof(cmd) - (prog - cmd) - 1);
-		printf("cmd: [%s]\n", cmd);//¾ÍÊÇµ±Ç°³ÌĞòÔËĞĞµÄÈ«Â·¾¶ÒÔ¼°³ÌĞòÃû
+		printf("cmd: [%s]\n", cmd);//å°±æ˜¯å½“å‰ç¨‹åºè¿è¡Œçš„å…¨è·¯å¾„ä»¥åŠç¨‹åºå
 		FILE* fp = ::popen(cmd, "w");
 		if (!fp) {
 			perror("popen");

@@ -73,7 +73,7 @@ int32 read(int fd, void* ptr, uint32 n) {
         int r = ::read(fd, ptr, n);
         if (r >= 0) return r;
 
-		if (errno == EAGAIN || errno == EINTR) {//EWOULDBLOCKÆäÊµ¾ÍÊÇEAGAIN
+		if (errno == EAGAIN || errno == EINTR) {//EWOULDBLOCKå…¶å®å°±æ˜¯EAGAIN
 			continue;
 		}
 
@@ -90,7 +90,7 @@ ssize_t readn(int fd, void *vptr, size_t n){
 	while (nleft > 0){
 		nread = ::read(fd, bp, nleft);
 		if (nread < 0){
-			if (errno == EINTR || errno == EAGAIN) {//EWOULDBLOCKÆäÊµ¾ÍÊÇEAGAIN
+			if (errno == EINTR || errno == EAGAIN) {//EWOULDBLOCKå…¶å®å°±æ˜¯EAGAIN
 				nread = 0;
 				break;
 			} else {
@@ -112,7 +112,7 @@ int32 write(int fd, const void* ptr, uint32 n) {
         CHECK_NE(r, 0);
         if (r > 0) return r;
 
-		if (r < 0 && errno == EAGAIN || errno == EINTR) {//EWOULDBLOCKÆäÊµ¾ÍÊÇEAGAIN
+		if (r < 0 && errno == EAGAIN || errno == EINTR) {//EWOULDBLOCKå…¶å®å°±æ˜¯EAGAIN
 			continue;
 		}
 		
@@ -122,15 +122,15 @@ int32 write(int fd, const void* ptr, uint32 n) {
 }
 
 ssize_t writen(int fd,const void *vptr,size_t n){
-	size_t nleft;	//Ê£ÓàÁ¿
-	ssize_t nwritten;	//ÒÑĞ´ÈëÁ¿
+	size_t nleft;	//å‰©ä½™é‡
+	ssize_t nwritten;	//å·²å†™å…¥é‡
 	const char *ptr = (const char *)vptr;
 
 	nleft=n;
 	while(nleft>0){
 		if( (nwritten=::write(fd,ptr,nleft)) <=0 ){
-			//Èç¹ûÊÇÒòÎªÏµÍ³²¶×½ĞÅºÅºÍÖĞ¶Ï,»òÕßÊÇ·Ç×èÈûÌ×½Ó×ÖÃèÊö·û,ÄÇÃ´writeÖØÊÔ
-			if( nwritten < 0 && (errno == EINTR || errno == EAGAIN))//EWOULDBLOCKÆäÊµ¾ÍÊÇEAGAIN
+			//å¦‚æœæ˜¯å› ä¸ºç³»ç»Ÿæ•æ‰ä¿¡å·å’Œä¸­æ–­,æˆ–è€…æ˜¯éé˜»å¡å¥—æ¥å­—æè¿°ç¬¦,é‚£ä¹ˆwriteé‡è¯•
+			if( nwritten < 0 && (errno == EINTR || errno == EAGAIN))//EWOULDBLOCKå…¶å®å°±æ˜¯EAGAIN
 				nwritten = 0;
 			else
 				return -1;

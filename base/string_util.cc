@@ -381,7 +381,7 @@ static char get_cn_pinyin(unsigned long wChinese)
 	code.c.cHigh = code.c.cLow;
 	code.c.cLow = c;
 
-	// ºº×ÖµÄ¸ß×Ö½ÚĞ¡ì¶0x80£¬¼´ÎªÓ¢ÎÄ×ÖÄ¸»òÏµÍ³char
+	// æ±‰å­—çš„é«˜å­—èŠ‚å°æ–¼0x80ï¼Œå³ä¸ºè‹±æ–‡å­—æ¯æˆ–ç³»ç»Ÿchar
 	if (code.c.cHigh < 0x80)
 		return 0;
 
@@ -427,7 +427,7 @@ static char get_cn_pinyin(unsigned long wChinese)
 		"lbxyfbpnlsfhtgjwejjxxglljstgshjqlzfkcgnndszfdeqfhbsaqtgylbxmmygszldydq?jjrgbjtkgdhgkblqkbd"
 		"mbylxwcxyttybkmrtjzxqjbhlmhmjjzmqasldcyxyqdlqcafywyxqhz";
 
-	// ³¬³öÄÚÂë±í·¶Î§
+	// è¶…å‡ºå†…ç è¡¨èŒƒå›´
 	if (code.wWord >= 0x0d8a1)
 	{
 		unsigned short w = 0x5e * (code.c.cHigh - 0xd8) + code.c.cLow - 0xa1;
@@ -461,7 +461,7 @@ std::string get_ab_pinyin(const std::string &name,bool upper)
 
 	unsigned char cRet;
 	char tmp[2];
-	for (int i = 0; i < name.size()&& i<20; )		//×î³¤Ö»ÄÜÊÇ20¸ö×Ö·û
+	for (int i = 0; i < name.size()&& i<20; )		//æœ€é•¿åªèƒ½æ˜¯20ä¸ªå­—ç¬¦
 	{
 		cRet = (unsigned char)name[i];
 		if (cRet >= 0x80)
@@ -481,7 +481,7 @@ std::string get_ab_pinyin(const std::string &name,bool upper)
 		}
 	}
 
-	// È¥µô "?" ×Ö·û
+	// å»æ‰ "?" å­—ç¬¦
 	str_remove_char(py, '?');
 	str_remove_char(py, 0x20);
 	std::string strNum = "                  ";
@@ -1002,7 +1002,7 @@ void get_full_pinyin(unsigned char* cn, std::string& py,bool upper)
 			//int ascii_code = Chinese[i]*256 + Chinese[i+1] - 256*256;
 			int ascii_code = (cn[i] - 0xa0)*100 + cn[i+1] - 0xa0;
 			++i;
-			if (ascii_code < 1601) //Î´Öª×Ö·û
+			if (ascii_code < 1601) //æœªçŸ¥å­—ç¬¦
 			{ 
 				py += "?";
 				continue;
@@ -1016,7 +1016,7 @@ void get_full_pinyin(unsigned char* cn, std::string& py,bool upper)
 				continue;
 			}
 
-			for (int j = 396; j >= 0; j--) //ÇøÎ»Âë
+			for (int j = 396; j >= 0; j--) //åŒºä½ç 
 			{
 				if (ascii_code >= code_qw[j])
 				{
@@ -1054,7 +1054,7 @@ double to_double(const std::string& v) {
 }
 
 
-//c++98 ²»Ö§³ÖÁĞ±í³õÊ¼»¯£¬Ö»ÄÜ²ÉÓÃÕÛÖĞµÄ·½Ê½
+//c++98 ä¸æ”¯æŒåˆ—è¡¨åˆå§‹åŒ–ï¼Œåªèƒ½é‡‡ç”¨æŠ˜ä¸­çš„æ–¹å¼
 std::pair<char,int> pairArray[] =   
 {  
 	std::make_pair('k', 10),  
@@ -1065,7 +1065,7 @@ std::pair<char,int> pairArray[] =
 };  
 static ascii_table __int_units(std::map<char,int>(pairArray,pairArray+sizeof(pairArray)/sizeof(pairArray[0])));
 
-//c++11 Ö§³ÖÁĞ±í³õÊ¼»¯
+//c++11 æ”¯æŒåˆ—è¡¨åˆå§‹åŒ–
 //static ascii_table __int_units {
 //	std::map<char, int> {
 //		{'k', 10}, {'m', 20}, {'g', 30}, {'t', 40}, {'p', 50},

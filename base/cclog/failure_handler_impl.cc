@@ -72,8 +72,8 @@ FailureHandler* NewFailureHandler() {
     return new FailureHandlerImpl;
 }
 
-//SA_RESTART：使被信号中断的系统调用能够重新发起
-//SA_ONSTACK：Use the alternate signal stack if available so we can catch stack overflows.
+//SA_RESTART锛氫娇琚俊鍙蜂腑鏂殑绯荤粺璋冪敤鑳藉閲嶆柊鍙戣捣
+//SA_ONSTACK锛歎se the alternate signal stack if available so we can catch stack overflows.
 FailureHandlerImpl::FailureHandlerImpl() {
     _buf = new char[_buf_size];
 
@@ -169,8 +169,8 @@ static int addr2line(const char* image, const char* addr, char* buf) {
 #endif
 
 void FailureHandlerImpl::on_signal(int sig) {
-    if (_cb != NULL) _cb();//执行回调
-    if (_f != NULL) ::fflush(_f);//将缓冲区数据写入文件
+    if (_cb != NULL) _cb();//鎵ц鍥炶皟
+    if (_f != NULL) ::fflush(_f);//灏嗙紦鍐插尯鏁版嵁鍐欏叆鏂囦欢
 
     pid_t pid = fork();
 
@@ -179,7 +179,7 @@ void FailureHandlerImpl::on_signal(int sig) {
         ::kill(getpid(), SIGSTOP);         // stop this process
         ::waitpid(pid, &status, WNOHANG);
 
-        sys::signal.reset(SIGABRT);//重置异常x信号
+        sys::signal.reset(SIGABRT);//閲嶇疆寮傚父x淇″彿
         ::abort();
     }
 

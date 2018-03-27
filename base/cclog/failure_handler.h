@@ -7,7 +7,7 @@
 namespace cclog {
 namespace xx {
 
-//´íÎó´¦Àí¾ä±ú£¨Ğé»ùÀà£©
+//é”™è¯¯å¤„ç†å¥æŸ„ï¼ˆè™šåŸºç±»ï¼‰
 class FailureHandler {
   public:
 	  FailureHandler() {};

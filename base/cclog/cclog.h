@@ -10,6 +10,7 @@
 #include <unistd.h>            // for syscall
 #include <sys/syscall.h>       // for SYS_gettid
 
+DEC_bool(stop_server);         // stop running server
 DEC_bool(log2stderr);          // log to stderr only
 DEC_bool(alsolog2stderr);      // log to stderr and file
 DEC_bool(dlog_on);             // if true, turn on DLOG
@@ -125,7 +126,7 @@ void log_by_hour(const char* tag);
 
 namespace xx {
 
-//±êÇ©styleÈÕÖ¾»º³åÇø
+//æ ‡ç­¾styleæ—¥å¿—ç¼“å†²åŒº
 class TaggedLog : public ::StreamBuf {
   public:
     TaggedLog(const char* type, int size)
@@ -142,7 +143,7 @@ class TaggedLog : public ::StreamBuf {
     const char* _type;
 };
 
-//¼¶±ğstyleÈÕÖ¾»º³åÇø
+//çº§åˆ«styleæ—¥å¿—ç¼“å†²åŒº
 class LevelLog : public ::StreamBuf {
 public:
 	LevelLog(int type, int size)
@@ -159,7 +160,7 @@ public:
     int _type;
 };
 
-//±êÇ©styleÈÕÖ¾´æ´¢Æ÷
+//æ ‡ç­¾styleæ—¥å¿—å­˜å‚¨å™¨
 class TaggedLogSaver {
   public:
     TaggedLogSaver(const char* file, int line, const char* tag) {
@@ -179,7 +180,7 @@ class TaggedLogSaver {
     DISALLOW_COPY_AND_ASSIGN(TaggedLogSaver);
 };
 
-//±ê×¼´íÎóÊä³ö»º³åÇø
+//æ ‡å‡†é”™è¯¯è¾“å‡ºç¼“å†²åŒº
 class CerrSaver {
 public:
 	CerrSaver() {}
@@ -199,7 +200,7 @@ public:
     DISALLOW_COPY_AND_ASSIGN(CerrSaver);
 };
 
-//±ê×¼Êä³ö»º³åÇø
+//æ ‡å‡†è¾“å‡ºç¼“å†²åŒº
 class CoutSaver {
   public:
 	  CoutSaver() {}
@@ -220,7 +221,7 @@ class CoutSaver {
     DISALLOW_COPY_AND_ASSIGN(CoutSaver);
 };
 
-//¼¶±ğstyleÈÕÖ¾´æ´¢Æ÷
+//çº§åˆ«styleæ—¥å¿—å­˜å‚¨å™¨
 class LevelLogSaver {
   public:
     LevelLogSaver(const char* file, int line, int type) {
@@ -241,7 +242,7 @@ class LevelLogSaver {
     DISALLOW_COPY_AND_ASSIGN(LevelLogSaver);
 };
 
-//·ÇÖÂÃü¼¶±ğÈÕÖ¾´æ´¢Æ÷
+//éè‡´å‘½çº§åˆ«æ—¥å¿—å­˜å‚¨å™¨
 struct NonFatalLogSaver : public LevelLogSaver {
     NonFatalLogSaver(const char* file, int line, int type)
         : LevelLogSaver(file, line, type) {
@@ -255,7 +256,7 @@ struct NonFatalLogSaver : public LevelLogSaver {
     void push();
 };
 
-//ÖÂÃü¼¶±ğÈÕÖ¾´æ´¢Æ÷
+//è‡´å‘½çº§åˆ«æ—¥å¿—å­˜å‚¨å™¨
 struct FatalLogSaver : public LevelLogSaver {
     FatalLogSaver(const char* file, int line, int type)
         : LevelLogSaver(file, line, type) {

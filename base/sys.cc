@@ -5,7 +5,7 @@
 namespace sys {
 namespace xx {
 
-//½«±¾µØÊ±¼ä×ª»»³É×Ö·û´®
+//å°†æœ¬åœ°æ—¶é—´è½¬æ¢æˆå­—ç¬¦ä¸²
 std::string local_time::to_string(int64 sec, const char* format) {
     struct tm tm;
     ::gmtime_r(&sec, &tm);
@@ -17,7 +17,7 @@ std::string local_time::to_string(int64 sec, const char* format) {
     return s;
 }
 
-//×¢²áĞÅºÅ»Øµ÷
+//æ³¨å†Œä¿¡å·å›è°ƒ
 bool signal::set_handler(int sig, handler_t handler, int flag) {
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
@@ -29,17 +29,17 @@ bool signal::set_handler(int sig, handler_t handler, int flag) {
     return sigaction(sig, &sa, NULL) != -1;
 }
 
-//»ñÈ¡ĞÅºÅ»Øµ÷
+//è·å–ä¿¡å·å›è°ƒ
 handler_t signal::get_handler(int sig) {
     struct sigaction sa;
     sigaction(sig, NULL, &sa);
     return sa.sa_handler;
 }
 
-//×¢²áĞÅºÅ»Øµ÷(×ÔÖ÷Î¬»¤Ò»¸ö»Øµ÷ÁĞ±í,ÔÚĞÅºÅ´¥·¢ºóÖğÒ»µ÷ÓÃ)
+//æ³¨å†Œä¿¡å·å›è°ƒ(è‡ªä¸»ç»´æŠ¤ä¸€ä¸ªå›è°ƒåˆ—è¡¨,åœ¨ä¿¡å·è§¦å‘åé€ä¸€è°ƒç”¨)
 void signal_handler::add_handler(int sig, boost::function<void()> cb, int flag) {
     std::map<int, cbque>::iterator it = _map.find(sig);
-    cbque& cbs = (it != _map.end()) ? it->second : (_map[sig] = cbque());//²»´æÔÚÔòĞÂ½¨Ò»¸ö
+    cbque& cbs = (it != _map.end()) ? it->second : (_map[sig] = cbque());//ä¸å­˜åœ¨åˆ™æ–°å»ºä¸€ä¸ª
     if (it != _map.end()) {
         cbs.push_back(cb);
         return;
@@ -47,20 +47,20 @@ void signal_handler::add_handler(int sig, boost::function<void()> cb, int flag) 
 
     handler_t oh = signal::get_handler(sig);
     if (oh != SIG_DFL && oh != SIG_IGN && oh != SIG_ERR) {
-        cbs.push_back(boost::bind(oh, sig));//Ìí¼ÓÔ­ĞÅºÅ´¦Àí»Øµ÷
+        cbs.push_back(boost::bind(oh, sig));//æ·»åŠ åŸä¿¡å·å¤„ç†å›è°ƒ
     }
 
     signal::set_handler(sig, &signal_handler::on_signal, flag);
-    cbs.push_back(cb);//×·¼Ó×îĞÂ×¢²áµÄĞÅºÅ»Øµ÷º¯Êı
+    cbs.push_back(cb);//è¿½åŠ æœ€æ–°æ³¨å†Œçš„ä¿¡å·å›è°ƒå‡½æ•°
 }
 
-//É¾³ıĞÅºÅ¶ÔÓ¦ËùÓĞ»Øµ÷
+//åˆ é™¤ä¿¡å·å¯¹åº”æ‰€æœ‰å›è°ƒ
 void signal_handler::del_handler(int sig) {
-    _map.erase(sig);//´ÓĞÅºÅ´¦ÀíÁĞ±íÖĞÉ¾³ı
-    signal::reset(sig);//ÖØÖÃ¸ÃĞÅºÅÎªÄ¬ÈÏ´¦Àí
+    _map.erase(sig);//ä»ä¿¡å·å¤„ç†åˆ—è¡¨ä¸­åˆ é™¤
+    signal::reset(sig);//é‡ç½®è¯¥ä¿¡å·ä¸ºé»˜è®¤å¤„ç†
 }
 
-//ĞÅºÅ»Øµ÷£º´¦ÀíĞÅºÅ(Ö»´¦ÀíÒ»´Î£¬´¥·¢Ò»´ÎºóËùÓĞ»Øµ÷ÖğÒ»ÔËĞĞºóÉ¾³ı)
+//ä¿¡å·å›è°ƒï¼šå¤„ç†ä¿¡å·(åªå¤„ç†ä¸€æ¬¡ï¼Œè§¦å‘ä¸€æ¬¡åæ‰€æœ‰å›è°ƒé€ä¸€è¿è¡Œååˆ é™¤)
 void signal_handler::handle_signal(int sig) {
     std::map<int, cbque>::iterator it = _map.find(sig);
     if (it == _map.end()) return;
@@ -76,7 +76,7 @@ void signal_handler::handle_signal(int sig) {
 
 } // namespace xx
 
-//Ë¯Ãß°´ºÁÃë¼ÆËã
+//ç¡çœ æŒ‰æ¯«ç§’è®¡ç®—
 void msleep(uint32 ms) {
     struct timespec ts;
     ts.tv_sec = ms / 1000;
@@ -85,7 +85,7 @@ void msleep(uint32 ms) {
     while (nanosleep(&ts, &ts) == -1 && errno == EINTR);
 }
 
-//Ë¯Ãß°´Î¢Ãë¼ÆËã
+//ç¡çœ æŒ‰å¾®ç§’è®¡ç®—
 void usleep(uint32 us) {
     struct timespec ts;
     ts.tv_sec = us / 1000000;
