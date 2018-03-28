@@ -1,0 +1,15 @@
+2018-03-28 Wednesday	v1.0.1
+(1)新增base/process_util.h文件，增加对进程间通信的一些辅助函数
+(2)在bin目录下新增proxy和rpc_client以及bus/backend，因为该源码编译需要在安装boost库环境下才能通过，为了一些
+学习者可以编译前运行代码，提供了编译后的二进制执行程序，测试方式如下：
+[root@localhost bin]# ./proxy -srvip=* -srvport=8080 &;tail -f log/proxy.INFO
+将程序切换到后台运行并监视日志输出情况
+然后执行客户端：
+[root@localhost bin]# ./rpc_client 127.0.0.1 8080
+可以看到程序客户端向服务器请求获取的回包输出在了终端界面
+
+此时在shell中输入：
+[root@localhost bin]# ps -elf | grep proxy
+会发现还有一个bus/backend在运行，因为这里模拟的是proxy动态启动一个进程在为一个新的客户处理
+此时可以去bus/下新创建的用户日志目录allen_log（本测试用例的用户名为allen）下查看后端进程的日志输出：
+[root@localhost bin]# cd bus/allen_log;tail -f backend.INFO

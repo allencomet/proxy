@@ -17,8 +17,8 @@
 
 
 
-namespace safe
-{
+namespace safe{
+
 	class Mutex {
 	public:
 		Mutex() {
