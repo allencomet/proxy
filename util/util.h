@@ -6,6 +6,7 @@
 #include "crc.h"
 #include "json/json.h"
 #include "../base/thread_util.h"
+#include "../base/process_util.h"
 #include "../base/sys.h"
 #include "../base/os.h"
 #include "../base/net_util.h"

@@ -27,7 +27,7 @@ namespace safe {
 
 		inline bool init(int id, int size) {
 			_size = size;
-			_mem_id = shmget((key_t)id, m_size, 0666 | IPC_CREAT); //create shared memory
+			_mem_id = shmget((key_t)id, _size, 0666 | IPC_CREAT); //create shared memory
 			if (_mem_id == -1) return false;
 			//connecting shared memory to the current process address space
 			_pMem = shmat(_mem_id, 0, 0);
