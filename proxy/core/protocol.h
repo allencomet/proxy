@@ -41,6 +41,11 @@ typedef struct {
 	char	reserved[20];	//保留字段
 }RPCPACK;
 
+typedef struct {
+	char tag[5];			//SPRPC
+	char topic[255];		//订阅主题名
+}SUBPACK;
+
 #pragma pack(pop)
 
 //const对象默认为文件的局部变量，所以const变量可以在头文件定义

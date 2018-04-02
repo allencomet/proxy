@@ -4,9 +4,9 @@ from glob import glob
 ccflags = []
 
 if ARGUMENTS.get('release', '0') == '0':
-  ccflags += ['-O2', '-g0', '-Werror', '-Wno-deprecated']	#-Werror，它要求gcc将所有的警告当成错误进行处理
+  ccflags += ['-O2', '-g0', '-Werror', '-Wno-deprecated']	
 else:
-  ccflags += ['-O2', '-g0', '-Wall', ]		#-Wall 打开gcc的所有警告
+  ccflags += ['-O2', '-g0', '-Wall', ]		
 
 ccdefines = {'_FILE_OFFSET_BITS' : '64', 'DEBUG' : 1, }
 
@@ -23,13 +23,15 @@ common_source_files = glob('util/impl/*.cc') + \
 			glob('util/json/impl/*.cc') + \
 			glob('base/*.cc') + \
 	      	glob('base/ccflag/*.cc') + \
-	       	glob('base/cclog/*.cc')
+	       	glob('base/cclog/*.cc') + \
+	       	glob('base/cctest/*.cc')
 
 rpc_source_files = ['rpc.cc'] + \
 		glob('proxy/*.cc') + \
 		glob('proxy/rpc/*.cc') + \
 		glob('proxy/core/*.cc') + \
-		common_source_files
+		common_source_files 
+
 
 ipc_source_files = ['ipc.cc'] + \
 		glob('proxy/*.cc') + \
@@ -38,9 +40,12 @@ ipc_source_files = ['ipc.cc'] + \
 		common_source_files
 
 
-
-
-client_source_files = glob("client/*.cc") + common_source_files
+test_source_files = glob("test/*.cc") + \
+			glob("client/*.cc") + \
+			glob('proxy/*.cc') + \
+			glob('proxy/rpc/*.cc') + \
+			glob('proxy/core/*.cc') + \
+			common_source_files 
 
 #print("mt source code list: >>")
 #for s in rpc_source_files:
@@ -49,7 +54,7 @@ client_source_files = glob("client/*.cc") + common_source_files
 
 env.Program('bin/proxy', rpc_source_files)
 env.Program('bin/bus/backend', ipc_source_files)
-env.Program('bin/client', client_source_files)
+env.Program('bin/test', test_source_files)
 
 
 #os.system('mv proxy debug/bin/')

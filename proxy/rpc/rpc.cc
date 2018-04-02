@@ -23,7 +23,7 @@ namespace proxy {
 
 			for (;;) {
 				if (!::FLG_stop_server) sys::sleep(3);
-				else break;
+				else break;//当接收到退出信号时回收所有服务线程
 			}
 
 			std::string msg("stop running server\n");

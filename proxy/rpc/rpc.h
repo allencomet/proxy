@@ -17,6 +17,12 @@ namespace proxy {
 
 			explicit NetServer(const std::string &ip, const int16 &port);
 			~NetServer() {
+				stop();
+			}
+
+			void run();
+
+			void stop() {
 				for (std::vector<ThreadPtr>::iterator it = _threads.begin();
 					it != _threads.end(); ++it) {
 					if (*it) {
@@ -25,9 +31,6 @@ namespace proxy {
 					}
 				}
 			}
-
-			void run();
-
 		private:
 			void worker(int32 listenfd);
 

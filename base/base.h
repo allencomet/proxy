@@ -1,6 +1,7 @@
 #pragma once
 #include "ccflag/ccflag.h"
 #include "cclog/cclog.h"
+#include "cctest/cctest.h"
 
 
 #include "ascii.h"

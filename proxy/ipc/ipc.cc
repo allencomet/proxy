@@ -22,8 +22,21 @@ namespace proxy {
 			}
 
 			for (;;) {
-				sys::sleep(60);
+				if(!::FLG_stop_server) sys::sleep(3);
+				else break;
 			}
+
+			std::string msg("stop running server\n");
+			::fwrite(msg.data(), 1, msg.size(), stderr);
+
+			for (std::vector<ThreadPtr>::iterator it = _threads.begin();
+				it != _threads.end(); ++it) {
+				(*it)->cancel();
+				(*it)->join();
+			}
+
+			msg = "server has been stopped\n";
+			::fwrite(msg.data(), 1, msg.size(), stderr);
 		}
 
 		void LocalServer::worker(int32 listenfd) {

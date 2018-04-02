@@ -1,3 +1,7 @@
+2018-04-02 Monday	v1.0.2
+(1)新增client和test目录，这些是一些测试用例，所以编译后会生成一个test可执行文件，只需要在bin目录里执行./test -a即可进行测试
+
+
 2018-03-28 Wednesday	v1.0.1
 (1)新增base/process_util.h文件，增加对进程间通信的一些辅助函数
 (2)在bin目录下新增proxy和rpc_client以及bus/backend，因为该源码编译需要在安装boost库环境下才能通过，为了一些
