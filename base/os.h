@@ -346,4 +346,6 @@ inline bool daemon() {
     return ::daemon(1, 0);
 }
 
+std::vector<int32> check_process(const std::string &);
+
 } // namespace os

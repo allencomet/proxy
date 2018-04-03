@@ -10,9 +10,7 @@ namespace proxy {
 			int32 optionVal = 0;
 			::setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &optionVal, sizeof(optionVal));
 
-			if (listenfd < 0) {
-				FLOG << "crate tcp socket error has been occurred: [" << errno << ":" << ::strerror(errno) << "]";
-			}
+			FLOG_IF(listenfd < 0) << "crate tcp socket error has been occurred: [" << errno << ":" << ::strerror(errno) << "]";
 
 			net::ipv4_addr localaddr(ip, port);
 			if (!net::bind(listenfd, localaddr)) {
@@ -318,8 +316,9 @@ namespace proxy {
 			} else {
 				WLOG << "request_handler is null";
 			}
-			WLOG << "wait for backend stop running for 1000 ms...";
-			sys::msleep(1000);
+			WLOG << "wait for backend stop running...";
+			
+			//sys::msleep(1000);
 		}
 
 		void Dispatcher::init_socket_option(int32 fd) {

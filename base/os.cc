@@ -155,4 +155,26 @@ std::string file::read(uint32 size) {
 
     return s;
 }
+
+std::vector<int32> check_process(const std::string &name) {
+	//ps -f | grep backend | grep -v grep | awk '{print $2}'
+	std::string cmd = "ps -f | grep '" + name + "' | grep -v 'grep' | awk '{print $2}'";
+	LOG << "full cmd: " << cmd;
+	FILE* fp;
+	if ((fp = ::popen(cmd.c_str(), "r")) == NULL) {
+		return std::vector<int32>();
+	}
+
+	std::vector<int32> pids;
+	char buf[1024];
+	if ((fgets(buf, 1024, fp)) != NULL) {
+		pids.push_back(atoi(buf));
+	}
+
+	::pclose(fp);
+
+	return pids;
+}
+
+
 } // namespace os

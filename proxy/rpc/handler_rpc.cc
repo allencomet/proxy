@@ -23,6 +23,7 @@ namespace {
 	const std::string kCurrentAbPath = os::get_current_dir_name();
 }
 
+
 namespace proxy {
 	namespace rpc {
 		const int32 kProxyInterface = 1000;
@@ -270,7 +271,12 @@ namespace proxy {
 			safe::MutexGuard g(_back_path_mtx);//后端服务器进程的地址
 			for (std::set<std::string>::iterator it = _back_path.begin(); it != _back_path.end(); ++it) {
 				WLOG << "prepare send message to back[" << *it << "]";
-				aux_inform_to_back(*it, pack);
+				aux_inform_to_back(*it, pack);//通过广播通知子进程关闭
+				std::vector<int32> pids = os::check_process(*it);
+				for (std::vector<int32>::iterator itp = pids.begin(); itp != pids.end(); ++itp){
+					::kill(*itp, SIGKILL);//如果子进程没有关闭，强制关闭后端服务进程
+					WLOG << "kill [path:" << *it << "][pid:" << *itp << "]...";
+				}
 			}
 		}
 

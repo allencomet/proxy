@@ -176,8 +176,24 @@ namespace client {
 				proxy::RPCPACK *pack = (proxy::RPCPACK *)sendbuf.data();
 
 				std::string content(buf + proxy::g_kRPCLen, n - proxy::g_kRPCLen);
-				CERR << "func_no: " << pack->func_no << ",flow_no: " << pack->flow_no << ",content: " << content;
-
+				switch (pack->flow_no % 3) {
+				case 0:
+					set_green();
+					CERR << "func_no: " << pack->func_no << ",flow_no: " << pack->flow_no << ",content: " << content;
+					reset_color();
+					break;
+				case 1:
+					set_red();
+					CERR << "func_no: " << pack->func_no << ",flow_no: " << pack->flow_no << ",content: " << content;
+					reset_color();
+					break;
+				case 2:
+					set_lightblue();
+					CERR << "func_no: " << pack->func_no << ",flow_no: " << pack->flow_no << ",content: " << content;
+					reset_color();
+					break;
+				}
+				
 				pack->flow_no++;
 
 				if (net::writen(sockfd, sendbuf.data(), datalen) < 0) {

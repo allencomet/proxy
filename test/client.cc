@@ -57,6 +57,12 @@ DEF_test(proxy) {
 		safe::Thread monitor(boost::bind(&start_monitor,10));
 		monitor.start();
 
+		/*std::vector<int32> pids = os::check_process("backend");
+		for (std::vector<int32>::iterator itp = pids.begin(); itp != pids.end(); ++itp) {
+			::kill(*itp, SIGKILL);
+			COUT << "kill [path:backend][pid:" << *itp << "]...";
+		}*/
+
 		ev.wait();
 		COUT << "wait for server stop running...";
 		serv.cancel();
