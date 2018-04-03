@@ -8,6 +8,9 @@ DEC_string(srvpath);		//ipc server bind address
 DEC_string(srvip);			//rpc server bind address
 DEC_uint32(srvport);		//server listen port
 
+DEC_uint32(conntype);
+DEC_string(remotepath);
+
 namespace proxy {
 	namespace rpc {
 

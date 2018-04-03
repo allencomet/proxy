@@ -18,6 +18,12 @@ namespace proxy {
 			explicit LocalServer(const std::string &path);
 
 			~LocalServer() {
+				stop();
+			}
+
+			void run();
+
+			void stop() {
 				for (std::vector<ThreadPtr>::iterator it = _threads.begin();
 					it != _threads.end(); ++it) {
 					if (*it) {
@@ -26,9 +32,6 @@ namespace proxy {
 					}
 				}
 			}
-
-			void run();
-
 		private:
 			void worker(int32 listenfd);
 

@@ -4,6 +4,9 @@
 #include "../../util/util.h"
 #include "../core/protocol.h"
 
+DEC_uint32(conntype);
+DEC_string(remotepath);
+
 namespace proxy {
 
 	class ConnManager;

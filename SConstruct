@@ -43,6 +43,7 @@ ipc_source_files = ['ipc.cc'] + \
 test_source_files = glob("test/*.cc") + \
 			glob("client/*.cc") + \
 			glob('proxy/*.cc') + \
+			glob('proxy/ipc/*.cc') + \
 			glob('proxy/rpc/*.cc') + \
 			glob('proxy/core/*.cc') + \
 			common_source_files 

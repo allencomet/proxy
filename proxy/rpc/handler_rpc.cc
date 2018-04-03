@@ -4,6 +4,9 @@
 #include "../core/connmanager.h"
 #include "dispatcher_rpc.h"
 
+DEF_uint32(conntype, 0, "connection pool type: 0: one connection per client 1: create connection pool in advance");
+DEF_string(remotepath, "bus/unixsock/test", "remote server path");
+
 namespace {
 	int32 connect_back_server(const std::string &path) {
 		int32 connfd;
@@ -30,9 +33,9 @@ namespace proxy {
 		const int32 kRPCInterface = 2000;
 		const int32 kIPCInterface = 3000;
 
-		const ErrMsg g_kUnkowErrMsg(-1, "unknow request");
-		const ErrMsg g_kIllegalErrMsg(-2, "illegal request");
-		const ErrMsg g_kNotFindErrMsg(-3, "input param invalid,can't find user id");
+		const ErrMsg kUnkowErrMsg(-1, "unknow request");
+		const ErrMsg kIllegalErrMsg(-2, "illegal request");
+		const ErrMsg kNotFindErrMsg(-3, "input param invalid,can't find user id");
 
 		//NOTE: 多个线程同时在执行此处,_connmanager取出的连接对象在epoll线程中会销毁，
 		//但是因为使用了智能指针，所以在这里如果处理过程中连接被销毁了，那么在发送响
@@ -69,37 +72,27 @@ namespace proxy {
 			if (jsonReader.parse(req.content.data(), jsonValue)) userid = jsonValue["user_id"].asString();//从json串中解析出用户ID
 			if (userid.empty()) {
 				ELOG << "input param invalid,can't find user id";
-				handle_error_request(req, g_kNotFindErrMsg.err_no, g_kNotFindErrMsg.err_msg);
+				handle_error_request(req, kNotFindErrMsg.err_no, kNotFindErrMsg.err_msg);
 				return;
 			}
 
-			std::string srvpath = kCurrentAbPath + "/bus/unixsock/" + userid;
-			std::string srvcmd = kCurrentAbPath + "/bus/backend -srvpath=" + srvpath + " -log_dir=" +
-				kCurrentAbPath + "/bus/" + userid + "_log &";
+			std::string srvpath = kCurrentAbPath + "/" + ::FLG_remotepath;
 			int32 connfd = connect_back_server(srvpath);
 			if (-1 == connfd) {
-				//(1)system指定监听路径方式启动后端进程
-				os::system(srvcmd);
-				save_back_path(srvpath);
-				//sys::msleep(100);//等待后端进程进行一些基本的初始化操作
-				//(2)根据指定路径连接后端进程
-				connfd = connect_back_server(srvpath);
-				if (connfd == -1) {
-					handle_illegal_request(req);
-					return;
-				}
-				LOG << "create a new backend[" << userid << "]: " << srvpath;
+				handle_illegal_request(req);
+				return;
 			} else {
-				LOG << "there's a backend[" << userid << "] exist: " << srvpath;
+				LOG << "there's a backend exist: " << srvpath;
 			}
 
 			ConnectionPtr backptr(new Connection(connfd, srvpath));
-			//(3)需要将新的连接添加到后端连接管理器以及前后端映射的map里
+			backptr->set_msg_time(sys::utc.ms());
+			//需要将新的连接添加到后端连接管理器以及前后端映射的map里
 			_connmanager_back.add_conn(connfd, backptr);
 			_epollcore._connmapptr->associate(req.fd, connfd);
-			//(4)将该连接注册到后端监听读事件
+			//将该连接注册到后端监听读事件
 			_epollcore.register_add_read_event_back(connfd);
-			//(5)将请求发送给后端进程
+			//将请求发送给后端进程
 			front_request_to_back(backptr, req);
 		}
 
@@ -156,11 +149,11 @@ namespace proxy {
 		}
 
 		void RequestHandler::handle_unknow_request(const request &req) {
-			handle_error_request(req, g_kUnkowErrMsg.err_no, g_kUnkowErrMsg.err_msg);
+			handle_error_request(req, kUnkowErrMsg.err_no, kUnkowErrMsg.err_msg);
 		}
 
 		void RequestHandler::handle_illegal_request(const request &req) {
-			handle_error_request(req, g_kIllegalErrMsg.err_no, g_kIllegalErrMsg.err_msg);
+			handle_error_request(req, kIllegalErrMsg.err_no, kIllegalErrMsg.err_msg);
 		}
 
 
