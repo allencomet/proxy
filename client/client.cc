@@ -195,11 +195,3 @@ namespace client {
 
 
 
-//int main(int argc,char **argv){
-//	int sockfd = net_client(argc, argv);
-//	//int sockfd = ipc_client(argc, argv);
-//	str_cli_rpc(sockfd);
-//	exit(0);
-//}
-
-

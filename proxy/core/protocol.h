@@ -19,10 +19,15 @@
 namespace proxy {
 #pragma pack(push, 1)
 
+typedef enum {
+	BACK_EXIT,
+	BACK_MSG
+}IPCMSGTYPE;
+
 typedef struct {
 	char	tag[5];			//CCIPC
 	char	ueser_id[16];	//用户ID
-	int32	msg_type;		//消息类型(0:进程退出,1:业务消息,2:主进程检测到交易日更新)
+	int32	msg_type;		//消息类型(0:进程退出,1:业务消息)
 	int32	flow_no;		//流水号
 	uint32	func_no;		//功能号
 	int32	err_no;			//错误码(请求包设置0)

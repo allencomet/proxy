@@ -4,7 +4,7 @@ from glob import glob
 ccflags = []
 
 if ARGUMENTS.get('release', '0') == '0':
-  ccflags += ['-O2', '-g0', '-Werror', '-Wno-deprecated']	
+  ccflags += ['-O2', '-g2', '-Werror', '-Wno-deprecated']	
 else:
   ccflags += ['-O2', '-g0', '-Wall', ]		
 

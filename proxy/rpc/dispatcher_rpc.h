@@ -27,6 +27,8 @@ namespace proxy {
 			}
 
 			~Dispatcher() {
+				inform_back_exit();
+
 				if (_front_threadptr) {
 					_front_threadptr->cancel();
 					_front_threadptr->join();
@@ -81,6 +83,8 @@ namespace proxy {
 			void server_busy(int32 fd);
 
 			void init_socket_option(int32 fd);
+
+			void inform_back_exit();
 
 			inline bool register_add_read_event_front(int32 fd) {
 				safe::MutexGuard g(_event_mtx_front);

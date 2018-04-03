@@ -51,12 +51,16 @@ void ConnManager::check_invalid_conn() {
 		safe::WriteLockGuard g(_conns_rwmtx);
 		for (boost::unordered_map<int32, ConnectionPtr>::iterator it = _conns.begin();
 			it != _conns.end();) {
-			if (sys::utc.sec() - it->second->msg_time() > _idle_time) {
-				WLOG << "check client idle timeout: fd[" << it->first << "],addr[" << it->second->addr() << "]...";
-				::close(it->second->fd());
+			if (it->second) {
+				if (sys::utc.sec() - it->second->msg_time() > _idle_time) {
+					WLOG << "check client idle timeout: fd[" << it->first << "],addr[" << it->second->addr() << "]...";
+					::close(it->second->fd());
+					_conns.erase(it++);
+				} else {
+					++it;
+				}
+			} else {
 				_conns.erase(it++);
-			}else {
-				++it;
 			}
 		}
 	}

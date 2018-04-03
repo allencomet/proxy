@@ -32,6 +32,11 @@ class ConnManager {
 
 	bool add_conn(int32 fd, const std::string &addr);
 
+	int32 size() {
+		safe::ReadLockGuard g(_conns_rwmtx);
+		return _conns.size();
+	}
+
 	inline void mark_death(int32 fd) {
 		safe::MutexGuard g(_kill_fds_mtx);
 		_kill_fds.insert(fd);
@@ -43,6 +48,37 @@ class ConnManager {
 
 	void check_invalid_conn();
 
+	//设置一个迭代器类，通过迭代器访问内部成员
+	class CMIterator {
+	public:
+		CMIterator(ConnManager &m) :_manager(m), _index(0){}
+		~CMIterator() {}
+
+		ConnectionPtr begin() {
+			safe::ReadLockGuard g(_manager._conns_rwmtx);
+			_index = 0;
+			return _manager._conns[_index];
+		}
+
+		ConnectionPtr next() {
+			safe::ReadLockGuard g(_manager._conns_rwmtx);
+			++_index;
+			if (++_index < _manager._conns.size()) {
+				return _manager._conns[_index];
+			}
+			return ConnectionPtr();
+		}
+
+		bool end() {
+			safe::ReadLockGuard g(_manager._conns_rwmtx);
+			return _index >= _manager._conns.size();
+		}
+
+	private:
+		ConnManager &_manager;
+		int _index;
+	};
+	//void broadcast(const StreamBuf &);
   private:
 	safe::RwLock _conns_rwmtx;
 	boost::unordered_map<int32, ConnectionPtr> _conns;

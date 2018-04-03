@@ -27,7 +27,7 @@ namespace proxy {
 						(*it)->cancel();
 						(*it)->join();
 					}
-				}
+				} 
 			}
 
 			void dispatcher(const request &req);
@@ -41,6 +41,8 @@ namespace proxy {
 					ptr->start();
 				}
 			}
+
+			void inform_back_exit();
 		private:
 			void create_new_back_process(const request &req);
 
@@ -57,7 +59,15 @@ namespace proxy {
 
 			void front_request_to_back(ConnectionPtr backptr, const request &req, const std::string &userid = "");//将前端请求包转发到后端服务器
 
-																												  //handle request
+			inline void save_back_path(const std::string &path) {
+				safe::MutexGuard g(_back_path_mtx);
+				_back_path.insert(path);
+				LOG << "insert " << path << " to set container";
+			}
+
+			bool aux_inform_to_back(const std::string &, IPCPACK &);
+
+			//hnadle request
 			void worker() {
 				LOG << "request handler worker running...";
 				for (;;) {
@@ -73,6 +83,9 @@ namespace proxy {
 			ConnManager &_connmanager_back;		//后端连接管理器
 			std::vector<ThreadPtr> _threads;
 			int32 _th_count;
+
+			safe::Mutex _back_path_mtx;
+			std::set<std::string> _back_path;//后端服务器进程的地址
 
 			safe::block_queue<request> _tasks;
 

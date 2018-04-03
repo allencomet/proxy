@@ -79,6 +79,7 @@ namespace proxy {
 			if (-1 == connfd) {
 				//(1)system指定监听路径方式启动后端进程
 				os::system(srvcmd);
+				save_back_path(srvpath);
 				//sys::msleep(100);//等待后端进程进行一些基本的初始化操作
 				//(2)根据指定路径连接后端进程
 				connfd = connect_back_server(srvpath);
@@ -87,8 +88,7 @@ namespace proxy {
 					return;
 				}
 				LOG << "create a new backend[" << userid << "]: " << srvpath;
-			}
-			else {
+			} else {
 				LOG << "there's a backend[" << userid << "] exist: " << srvpath;
 			}
 
@@ -230,6 +230,7 @@ namespace proxy {
 			::memset(&pack, 0, g_kIPCLen);
 			::memcpy(pack.tag, g_kIPCTag.c_str(), g_kIPCTag.size());
 			::memcpy(pack.ueser_id, userid.c_str(), userid.size());
+			pack.msg_type = BACK_MSG;
 			pack.flow_no = req.rpc_pack.flow_no;
 			pack.func_no = req.rpc_pack.func_no;
 			pack.body_len = req.content.size();
@@ -240,6 +241,52 @@ namespace proxy {
 			backptr->append_write_pack_s(bufptr);
 			//将写缓冲区数据全部放在epoll中去操作
 			_epollcore.register_mod_rw_event_back(backptr->fd());
+		}
+
+		//将包广播给所有后端服务器进程
+		void RequestHandler::inform_back_exit() {
+			IPCPACK pack;
+			::memset(&pack, 0, g_kIPCLen);
+			::memcpy(pack.tag, g_kIPCTag.c_str(), g_kIPCTag.size());
+			pack.msg_type = BACK_EXIT;
+
+			//如果客户连接已经关闭了，在这里连接也取不到，所以无法通知后端进程退出，只能在创建后端进程时保存下已经创建的后端进程的地址
+			//然后再这里去通知后端进程退出
+			//WLOG << "inform backend exit,there are [" << _connmanager_back.size() << "] connection in pool";
+			//ConnManager::CMIterator iter(_connmanager_back);
+			//for (ConnectionPtr it = iter.begin(); !iter.end(); it = iter.next()) {
+			//	if (it) {
+			//		WLOG << "inform backend[" << it->addr() << "] to exit...";
+			//		StreamBufPtr bufptr(new StreamBuf);
+			//		bufptr->append(&pack, g_kIPCLen);
+			//		//为了确保不在多个处理线程内同时往这个后端套接字发送数据，将请求包放到请求队列，在epoll中发送
+			//		it->append_write_pack_s(bufptr);
+			//		//将写缓冲区数据全部放在epoll中去操作
+			//		_epollcore.register_mod_rw_event_back(it->fd());
+			//	}
+			//}
+
+			WLOG << "prepare send message to all backends";
+			safe::MutexGuard g(_back_path_mtx);//后端服务器进程的地址
+			for (std::set<std::string>::iterator it = _back_path.begin(); it != _back_path.end(); ++it) {
+				WLOG << "prepare send message to back[" << *it << "]";
+				aux_inform_to_back(*it, pack);
+			}
+		}
+
+		bool RequestHandler::aux_inform_to_back(const std::string &srvpath, IPCPACK &pack) {
+			bool flag = false;
+			int32 connfd = connect_back_server(srvpath);
+			if (-1 != connfd) {
+				if (-1 == net::writen(connfd, &pack, g_kIPCLen)) {
+					WLOG << "failed to inform back[" << srvpath << "] exit...";
+				} else {
+					WLOG << "inform back[" << srvpath << "] exit...";
+					flag = true;
+				}
+				::close(connfd);
+			}
+			return flag;
 		}
 
 	}//namespace rpc

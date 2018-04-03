@@ -312,6 +312,16 @@ namespace proxy {
 			close_client_front(fd);
 		}
 
+		void Dispatcher::inform_back_exit() {
+			if (_request_handler) {
+				_request_handler->inform_back_exit();
+			} else {
+				WLOG << "request_handler is null";
+			}
+			WLOG << "wait for backend stop running for 1000 ms...";
+			sys::msleep(1000);
+		}
+
 		void Dispatcher::init_socket_option(int32 fd) {
 			int nRecvBuf = 128 * 1024;//设置为32K  
 			::setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int));
@@ -320,7 +330,7 @@ namespace proxy {
 			::setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (const char*)&nSendBuf, sizeof(int));
 
 			int32 nNetTimeout = 1000;//1秒  
-									 //发送时限  
+			//发送时限  
 			::setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&nNetTimeout, sizeof(int));
 
 			//接收时限  
