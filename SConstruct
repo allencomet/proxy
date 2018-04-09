@@ -26,18 +26,18 @@ common_source_files = glob('util/impl/*.cc') + \
 	       	glob('base/cclog/*.cc') + \
 	       	glob('base/cctest/*.cc')
 
-rpc_source_files = ['rpc.cc'] + \
-		glob('proxy/*.cc') + \
-		glob('proxy/rpc/*.cc') + \
-		glob('proxy/core/*.cc') + \
-		common_source_files 
+proxy_common_source_files = glob('proxy/*.cc') + \
+			glob('proxy/core/*.cc') + \
+			glob('proxy/lb/*.cc') + \
+			common_source_files
 
+rpc_source_files = ['rpc.cc'] + \
+		glob('proxy/rpc/*.cc') + \
+		proxy_common_source_files 
 
 ipc_source_files = ['ipc.cc'] + \
-		glob('proxy/*.cc') + \
 		glob('proxy/ipc/*.cc') + \
-		glob('proxy/core/*.cc') + \
-		common_source_files
+		proxy_common_source_files
 
 
 test_source_files = glob("test/*.cc") + \
