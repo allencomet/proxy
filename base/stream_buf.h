@@ -10,9 +10,9 @@
 
 
 class StreamBuf {
-  public:
-    explicit StreamBuf(uint32 size = 32):_rhead(false),_bodylen(0) {
-        _pbeg = (char*) ::malloc(size);	
+public:
+    explicit StreamBuf(uint32 size = 32) : _rhead(false), _bodylen(0) {
+        _pbeg = (char *) ::malloc(size);
         _pcur = _pbeg;
         _pend = _pbeg + size;
     }
@@ -26,7 +26,7 @@ class StreamBuf {
     }
 
     uint32 capacity() const {
-        return static_cast<uint32>(_pend - _pbeg);		//return capacity
+        return static_cast<uint32>(_pend - _pbeg);        //return capacity
     }
 
     bool empty() const {
@@ -34,13 +34,13 @@ class StreamBuf {
     }
 
     // not null-terminated
-    const char* data() const {
+    const char *data() const {
         return _pbeg;
     }
 
-	const char *data(uint32 n) const{
-		return _pbeg + n;
-	}
+    const char *data(uint32 n) const {
+        return _pbeg + n;
+    }
 
     const char *head() const {
         return _pbeg;
@@ -50,7 +50,7 @@ class StreamBuf {
         return _pcur;
     }
 
-    void addoffset(uint32 n){
+    void addoffset(uint32 n) {
         _pcur += n;
     }
 
@@ -62,21 +62,21 @@ class StreamBuf {
         _pcur = _pbeg;
     }
 
-	void clear_head(uint32 n){
+    void clear_head(uint32 n) {
         uint32 size = this->size();
-		uint32 count = size - n;
-		if (0 < count){
-			::memmove(_pbeg, _pbeg + n, count);
-			_pcur -= n;
-			//::memset(_pcur, '\0', n);
-		}else {
-			_pcur = _pbeg;
-		}
-	}
+        uint32 count = size - n;
+        if (0 < count) {
+            ::memmove(_pbeg, _pbeg + n, count);
+            _pcur -= n;
+            //::memset(_pcur, '\0', n);
+        } else {
+            _pcur = _pbeg;
+        }
+    }
 
-	void clear_tail(uint32 n){
+    void clear_tail(uint32 n) {
         _pcur -= n;
-	}
+    }
 
     void resize(uint32 n) {
         uint32 size = this->size();
@@ -88,7 +88,7 @@ class StreamBuf {
         uint32 size = this->size();
         if (n <= size) return true;
 
-        char* p = (char*) ::realloc(_pbeg, n);
+        char *p = (char *) ::realloc(_pbeg, n);
         if (p == NULL) return false;
 
         _pbeg = p;
@@ -98,7 +98,7 @@ class StreamBuf {
         return true;
     }
 
-    StreamBuf& append(const void* data, uint32 size) {
+    StreamBuf &append(const void *data, uint32 size) {
         if (static_cast<uint32>(_pend - _pcur) < size) {
             if (!this->reserve(this->capacity() + size + 32)) {
                 return *this;
@@ -110,89 +110,89 @@ class StreamBuf {
         return *this;
     }
 
-    StreamBuf& operator<<(bool v) {
+    StreamBuf &operator<<(bool v) {
         return v ? this->append("true", 4) : this->append("false", 5);
     }
 
-    StreamBuf& operator<<(char v) {
+    StreamBuf &operator<<(char v) {
         return this->append(&v, 1);
     }
 
-    StreamBuf& operator<<(unsigned char v) {
+    StreamBuf &operator<<(unsigned char v) {
         return this->write("%u", v);
     }
 
-    StreamBuf& operator<<(short v) {
+    StreamBuf &operator<<(short v) {
         return this->write("%d", v);
     }
 
-    StreamBuf& operator<<(unsigned short v) {
+    StreamBuf &operator<<(unsigned short v) {
         return this->write("%u", v);
     }
 
-    StreamBuf& operator<<(int v) {
+    StreamBuf &operator<<(int v) {
         return this->write("%d", v);
     }
 
-    StreamBuf& operator<<(unsigned int v) {
+    StreamBuf &operator<<(unsigned int v) {
         return this->write("%u", v);
     }
 
-    StreamBuf& operator<<(long v) {
+    StreamBuf &operator<<(long v) {
         return this->write("%ld", v);
     }
 
-    StreamBuf& operator<<(unsigned long v) {
+    StreamBuf &operator<<(unsigned long v) {
         return this->write("%lu", v);
     }
 
-    StreamBuf& operator<<(long long v) {
+    StreamBuf &operator<<(long long v) {
         return this->write("%lld", v);
     }
 
-    StreamBuf& operator<<(unsigned long long v) {
+    StreamBuf &operator<<(unsigned long long v) {
         return this->write("%llu", v);
     }
 
-    StreamBuf& operator<<(float v) {
+    StreamBuf &operator<<(float v) {
         return this->write("%.7g", v);
     }
 
-    StreamBuf& operator<<(double v) {
-        return this->write("%.16lg", v);	//16
+    StreamBuf &operator<<(double v) {
+        return this->write("%.16lg", v);    //16
     }
 
-    StreamBuf& operator<<(const char* v) {
+    StreamBuf &operator<<(const char *v) {
         return this->append(v, ::strlen(v));
     }
 
-    StreamBuf& operator<<(const std::string& v) {
+    StreamBuf &operator<<(const std::string &v) {
         return this->append(v.data(), v.size());
     }
 
-    StreamBuf& operator<<(const void* v) {
+    StreamBuf &operator<<(const void *v) {
         return this->write("0x%llx", v);
     }
 
-	inline bool header_has_read() const{
-		return _rhead;
-	}
+    inline bool header_has_read() const {
+        return _rhead;
+    }
 
-	inline void mark_read_header(bool rhead){
-		_rhead = rhead;
-	}
+    inline void mark_read_header(bool rhead) {
+        _rhead = rhead;
+    }
 
-	inline void set_body_len(int len){
-		_bodylen = len;
-	}
+    inline void set_body_len(int len) {
+        _bodylen = len;
+    }
 
-	inline int bodylen() const {
-		return _bodylen;
-	}
+    inline int bodylen() const {
+        return _bodylen;
+    }
 
-  private:
+private:
     template<typename T>
-    StreamBuf& write(const char* fm, T t) {
+    StreamBuf &write(const char *fm, T t) {
         int x = static_cast<int>(_pend - _pcur);
         int r = ::snprintf(_pcur, x, fm, t);
         if (r < 0) return *this;
@@ -213,13 +213,13 @@ class StreamBuf {
         return *this;
     }
 
-  private:
-    char* _pbeg;		//begin
-    char* _pcur;		//current
-    char* _pend;		//end
+private:
+    char *_pbeg;        //begin
+    char *_pcur;        //current
+    char *_pend;        //end
 
-	bool _rhead;	//header has been read
-	int _bodylen;
+    bool _rhead;    //header has been read
+    int _bodylen;
 
     DISALLOW_COPY_AND_ASSIGN(StreamBuf);
 };

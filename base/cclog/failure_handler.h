@@ -1,27 +1,29 @@
 #pragma once
 
 #include <stdio.h>
-//#include <functional>
-#include <boost/function.hpp>
+#include <functional>
 
 namespace cclog {
-namespace xx {
+    namespace xx {
 
 //错误处理句柄（虚基类）
-class FailureHandler {
-  public:
-	  FailureHandler() {};
-	  virtual ~FailureHandler() {};
+        class FailureHandler {
+        public:
+            FailureHandler() {};
 
-    virtual void set_fd(FILE* file) = 0;
-    virtual void set_handler(boost::function<void()> cb) = 0;
+            virtual ~FailureHandler() {};
 
-  private:
-	  FailureHandler(const FailureHandler &);
-	  void operator=(const FailureHandler &);
-};
+            virtual void set_fd(FILE *file) = 0;
 
-FailureHandler* NewFailureHandler();
+            virtual void set_handler(std::function<void()> cb) = 0;
 
-}  // namespace xx
+        private:
+            FailureHandler(const FailureHandler &);
+
+            void operator=(const FailureHandler &);
+        };
+
+        FailureHandler *NewFailureHandler();
+
+    }  // namespace xx
 }  // namespace cclog

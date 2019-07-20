@@ -55,13 +55,13 @@
 // Storages, and 64 bits integer support is disabled.
 // #define JSON_NO_INT64 1
 
-#if defined(_MSC_VER)  &&  _MSC_VER <= 1200 // MSVC 6
+#if defined(_MSC_VER) && _MSC_VER <= 1200 // MSVC 6
 // Microsoft Visual Studio 6 only support conversion from __int64 to double
 // (no conversion from unsigned __int64).
 #define JSON_USE_INT64_DOUBLE_CONVERSION 1
 #endif // if defined(_MSC_VER)  &&  _MSC_VER < 1200 // MSVC 6
 
-#if defined(_MSC_VER)  &&  _MSC_VER >= 1500 // MSVC 2008
+#if defined(_MSC_VER) && _MSC_VER >= 1500 // MSVC 2008
 /// Indicates that the following function is deprecated.
 # define JSONCPP_DEPRECATED(message) __declspec(deprecated(message))
 #endif
@@ -70,8 +70,7 @@
 # define JSONCPP_DEPRECATED(message)
 #endif // if !defined(JSONCPP_DEPRECATED)
 
-namespace Json
-{
+namespace Json {
     typedef int Int;
     typedef unsigned int UInt;
 # if defined(JSON_NO_INT64)

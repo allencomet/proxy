@@ -3,49 +3,51 @@
 
 #include "../../util/util.h"
 
-DEC_uint32(thcount);		//the number of thread in server
-DEC_string(srvpath);		//ipc server bind address
-DEC_string(srvip);			//rpc server bind address
-DEC_uint32(srvport);		//server listen port
+DEC_uint32(thcount);        //the number of thread in server
+DEC_string(srvpath);        //ipc server bind address
+DEC_string(srvip);            //rpc server bind address
+DEC_uint32(srvport);        //server listen port
 
 DEC_uint32(conntype);
 DEC_string(remotepath);
 
 namespace proxy {
-	namespace rpc {
+    namespace rpc {
 
-		class NetServer {
-		public:
-			typedef boost::shared_ptr<safe::Thread> ThreadPtr;
+        class NetServer {
+        public:
+            typedef std::shared_ptr<safe::Thread> ThreadPtr;
 
-			explicit NetServer(const std::string &ip, const int16 &port);
-			~NetServer() {
-				stop();
-			}
+            explicit NetServer(const std::string &ip, const int16 &port);
 
-			void run();
+            ~NetServer() {
+                stop();
+            }
 
-			void stop() {
-				for (std::vector<ThreadPtr>::iterator it = _threads.begin();
-					it != _threads.end(); ++it) {
-					if (*it) {
-						(*it)->cancel();
-						(*it)->join();
-					}
-				}
-			}
-		private:
-			void worker(int32 listenfd);
+            void run();
 
-			std::string _ip;//server ip
-			int16 _port;//server port
-			int32 _listenfd;
-			std::vector<ThreadPtr> _threads;
+            void stop() {
+                for (std::vector<ThreadPtr>::iterator it = _threads.begin();
+                     it != _threads.end(); ++it) {
+                    if (*it) {
+                        (*it)->cancel();
+                        (*it)->join();
+                    }
+                }
+            }
 
-			DISALLOW_COPY_AND_ASSIGN(NetServer);
-		};
+        private:
+            void worker(int32 listenfd);
 
-	}//namespace rpc
+            std::string _ip;//server ip
+            int16 _port;//server port
+            int32 _listenfd;
+            std::vector<ThreadPtr> _threads;
+
+            DISALLOW_COPY_AND_ASSIGN(NetServer);
+        };
+
+    }//namespace rpc
 }//namespace proxy
 
 #endif

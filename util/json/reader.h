@@ -7,22 +7,23 @@
 # define CPPTL_JSON_READER_H_INCLUDED
 
 #if !defined(JSON_IS_AMALGAMATION)
+
 # include "features.h"
 # include "value.h"
+
 #endif // if !defined(JSON_IS_AMALGAMATION)
+
 # include <deque>
 # include <stack>
 # include <string>
 # include <iostream>
 
-namespace Json
-{
+namespace Json {
 
     /** \brief Unserialize a <a HREF="http://www.json.org">JSON</a> document into a Value.
      *
      */
-    class JSON_API Reader
-    {
+    class JSON_API Reader {
     public:
         typedef char Char;
         typedef const Char *Location;
@@ -35,7 +36,7 @@ namespace Json
         /** \brief Constructs a Reader allowing the specified feature set
          * for parsing.
          */
-        Reader( const Features &features );
+        Reader(const Features &features);
 
         /** \brief Read a Value from a <a HREF="http://www.json.org">JSON</a> document.
          * \param document UTF-8 encoded string containing the document to read.
@@ -47,9 +48,9 @@ namespace Json
          *                        is \c false.
          * \return \c true if the document was successfully parsed, \c false if an error occurred.
          */
-        bool parse( const std::string &document,
-                    Value &root,
-                    bool collectComments = true );
+        bool parse(const std::string &document,
+                   Value &root,
+                   bool collectComments = true);
 
         /** \brief Read a Value from a <a HREF="http://www.json.org">JSON</a> document.
          * \param beginDoc Pointer on the beginning of the UTF-8 encoded string of the document to read.
@@ -63,15 +64,15 @@ namespace Json
          *                        is \c false.
          * \return \c true if the document was successfully parsed, \c false if an error occurred.
          */
-        bool parse( const char *beginDoc, const char *endDoc,
-                    Value &root,
-                    bool collectComments = true );
+        bool parse(const char *beginDoc, const char *endDoc,
+                   Value &root,
+                   bool collectComments = true);
 
         /// \brief Parse from input stream.
         /// \see Json::operator>>(std::istream&, Json::Value&).
-        bool parse( std::istream &is,
-                    Value &root,
-                    bool collectComments = true );
+        bool parse(std::istream &is,
+                   Value &root,
+                   bool collectComments = true);
 
         /** \brief Returns a user friendly string that list errors in the parsed document.
          * \return Formatted error message with the list of errors with their location in
@@ -80,6 +81,7 @@ namespace Json
          * \deprecated Use getFormattedErrorMessages() instead (typo fix).
          */
         JSONCPP_DEPRECATED("Use getFormattedErrorMessages instead")
+
         std::string getFormatedErrorMessages() const;
 
         /** \brief Returns a user friendly string that list errors in the parsed document.
@@ -90,8 +92,7 @@ namespace Json
         std::string getFormattedErrorMessages() const;
 
     private:
-        enum TokenType
-        {
+        enum TokenType {
             tokenEndOfStream = 0,
             tokenObjectBegin,
             tokenObjectEnd,
@@ -108,16 +109,14 @@ namespace Json
             tokenError
         };
 
-        class Token
-        {
+        class Token {
         public:
             TokenType type_;
             Location start_;
             Location end_;
         };
 
-        class ErrorInfo
-        {
+        class ErrorInfo {
         public:
             Token token_;
             std::string message_;
@@ -126,49 +125,76 @@ namespace Json
 
         typedef std::deque<ErrorInfo> Errors;
 
-        bool expectToken( TokenType type, Token &token, const char *message );
-        bool readToken( Token &token );
+        bool expectToken(TokenType type, Token &token, const char *message);
+
+        bool readToken(Token &token);
+
         void skipSpaces();
-        bool match( Location pattern,
-                    int patternLength );
+
+        bool match(Location pattern,
+                   int patternLength);
+
         bool readComment();
+
         bool readCStyleComment();
+
         bool readCppStyleComment();
+
         bool readString();
+
         void readNumber();
+
         bool readValue();
-        bool readObject( Token &token );
-        bool readArray( Token &token );
-        bool decodeNumber( Token &token );
-        bool decodeString( Token &token );
-        bool decodeString( Token &token, std::string &decoded );
-        bool decodeDouble( Token &token );
-        bool decodeUnicodeCodePoint( Token &token,
-                                     Location &current,
-                                     Location end,
-                                     unsigned int &unicode );
-        bool decodeUnicodeEscapeSequence( Token &token,
-                                          Location &current,
-                                          Location end,
-                                          unsigned int &unicode );
-        bool addError( const std::string &message,
-                       Token &token,
-                       Location extra = 0 );
-        bool recoverFromError( TokenType skipUntilToken );
-        bool addErrorAndRecover( const std::string &message,
-                                 Token &token,
-                                 TokenType skipUntilToken );
+
+        bool readObject(Token &token);
+
+        bool readArray(Token &token);
+
+        bool decodeNumber(Token &token);
+
+        bool decodeString(Token &token);
+
+        bool decodeString(Token &token, std::string &decoded);
+
+        bool decodeDouble(Token &token);
+
+        bool decodeUnicodeCodePoint(Token &token,
+                                    Location &current,
+                                    Location end,
+                                    unsigned int &unicode);
+
+        bool decodeUnicodeEscapeSequence(Token &token,
+                                         Location &current,
+                                         Location end,
+                                         unsigned int &unicode);
+
+        bool addError(const std::string &message,
+                      Token &token,
+                      Location extra = 0);
+
+        bool recoverFromError(TokenType skipUntilToken);
+
+        bool addErrorAndRecover(const std::string &message,
+                                Token &token,
+                                TokenType skipUntilToken);
+
         void skipUntilSpace();
+
         Value &currentValue();
+
         Char getNextChar();
-        void getLocationLineAndColumn( Location location,
-                                       int &line,
-                                       int &column ) const;
-        std::string getLocationLineAndColumn( Location location ) const;
-        void addComment( Location begin,
-                         Location end,
-                         CommentPlacement placement );
-        void skipCommentTokens( Token &token );
+
+        void getLocationLineAndColumn(Location location,
+                                      int &line,
+                                      int &column) const;
+
+        std::string getLocationLineAndColumn(Location location) const;
+
+        void addComment(Location begin,
+                        Location end,
+                        CommentPlacement placement);
+
+        void skipCommentTokens(Token &token);
 
         typedef std::stack<Value *> Nodes;
         Nodes nodes_;
@@ -208,12 +234,13 @@ namespace Json
      \throw std::exception on parse error.
      \see Json::operator<<()
     */
-    std::istream &operator>>( std::istream &, Value & );
+    std::istream &operator>>(std::istream &, Value &);
 
-	//½«JsonµÄ×Ö·û´®»òÕßÊýÖµ×ª»»Îªdouble
-	double		getJsonDouble(const Value &jsonValue);
-	//½«JsonµÄ×Ö·û´®»òÕßÊýÖµ×ª»»Îªint
-	int			getJsonInt(const Value &jsonValue);
+    //ï¿½ï¿½Jsonï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ×ªï¿½ï¿½Îªdouble
+    double getJsonDouble(const Value &jsonValue);
+
+    //ï¿½ï¿½Jsonï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ×ªï¿½ï¿½Îªint
+    int getJsonInt(const Value &jsonValue);
 } // namespace Json
 
 #endif // CPPTL_JSON_READER_H_INCLUDED

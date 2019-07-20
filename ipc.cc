@@ -9,12 +9,12 @@
 *   ./exe --config=xx.conf
 *
 */
-int main(int argc, char** argv){
-	ccflag::init_ccflag(argc, argv);
-	cclog::init_cclog(os::get_process_name());
+int main(int argc, char **argv) {
+    ccflag::init_ccflag(argc, argv);
+    cclog::init_cclog(os::get_process_name());
 
-	proxy::ipc::LocalServer srv(::FLG_srvpath);
-	srv.run();
+    proxy::ipc::LocalServer srv(::FLG_srvpath);
+    srv.run();
 
     return 0;
 }

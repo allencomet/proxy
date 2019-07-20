@@ -1,0 +1,132 @@
+cmake_minimum_required(VERSION 3.14)
+project(proxy)
+
+set(CMAKE_CXX_STANDARD 14)
+
+include_directories(base)
+include_directories(base/ccflag)
+include_directories(base/cclog)
+include_directories(base/cctest)
+include_directories(client)
+include_directories(client/backup)
+include_directories(example)
+include_directories(example/rlog)
+include_directories(example/select)
+include_directories(proxy)
+include_directories(proxy/core)
+include_directories(proxy/ipc)
+include_directories(proxy/lb)
+include_directories(proxy/rpc)
+include_directories(test)
+include_directories(util)
+include_directories(util/json)
+include_directories(util/json/impl)
+
+add_executable(proxy
+        base/ccflag/ccflag.cc
+        base/ccflag/ccflag.h
+        base/cclog/cclog.cc
+        base/cclog/cclog.h
+        base/cclog/failure_handler.h
+        base/cclog/failure_handler_impl.cc
+        base/cctest/cctest.cc
+        base/cctest/cctest.h
+        base/ascii.h
+        base/base.h
+        base/block_queue.h
+        base/data_types.h
+        base/death_handler.cc
+        base/death_handler.h
+        base/error.cc
+        base/error.h
+        base/exception_catch.cc
+        base/exception_catch.h
+        base/net_util.cc
+        base/net_util.h
+        base/os.cc
+        base/os.h
+        base/process_util.h
+        base/stream_buf.h
+        base/string_util.cc
+        base/string_util.h
+        base/sys.cc
+        base/sys.h
+        base/thread_util.cc
+        base/thread_util.h
+        client/backup/main.cc
+        client/backup/parser.h
+        client/backup/protocol.h
+        client/backup/unit_client.cc
+        client/backup/unit_client.h
+        client/client.cc
+        client/client.h
+        example/rlog/rlog.cc
+        example/rlog/rlog.h
+        example/select/client.cc
+        example/select/client.h
+        example/select/evhandler.cc
+        example/select/evhandler.h
+        example/select/ipc.cc
+        example/select/ipc.h
+        example/select/main.cc
+        example/select/protocol.h
+        example/select/reply.h
+        example/select/request.h
+        example/select/request_handler.cc
+        example/select/request_handler.h
+        example/select/request_parser.cc
+        example/select/request_parser.h
+        example/select/server.cc
+        example/select/server.h
+        example/epoll_base.h
+        proxy/core/connection.h
+        proxy/core/connmanager.cc
+        proxy/core/connmanager.h
+        proxy/core/connmap.h
+        proxy/core/parser.h
+        proxy/core/protocol.h
+        proxy/ipc/dispatcher_ipc.cc
+        proxy/ipc/dispatcher_ipc.h
+        proxy/ipc/handler_ipc.cc
+        proxy/ipc/handler_ipc.h
+        proxy/ipc/ipc.cc
+        proxy/ipc/ipc.h
+        proxy/lb/lb_algo.cc
+        proxy/lb/lb_algo.h
+        proxy/rpc/dispatcher_rpc.cc
+        proxy/rpc/dispatcher_rpc.h
+        proxy/rpc/handler_rpc.cc
+        proxy/rpc/handler_rpc.h
+        proxy/rpc/rpc.cc
+        proxy/rpc/rpc.h
+        proxy/proxy.cc
+        proxy/proxy.h
+        test/client.cc
+        test/main.cc
+        util/impl/crc.cc
+        util/impl/kmp.cc
+        util/impl/md5.cc
+        util/impl/url_coder.cc
+        util/json/impl/json_batchallocator.h
+        util/json/impl/json_internalarray.inl
+        util/json/impl/json_internalmap.inl
+        util/json/impl/json_reader.cc
+        util/json/impl/json_tool.h
+        util/json/impl/json_value.cc
+        util/json/impl/json_valueiterator.inl
+        util/json/impl/json_writer.cc
+        util/json/autolink.h
+        util/json/config.h
+        util/json/features.h
+        util/json/forwards.h
+        util/json/json.h
+        util/json/reader.h
+        util/json/value.h
+        util/json/writer.h
+        util/crc.h
+        util/kmp.h
+        util/md5.h
+        util/url_coder.h
+        util/util.h
+        ipc.cc
+        rpc.cc)

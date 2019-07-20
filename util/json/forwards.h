@@ -7,14 +7,16 @@
 # define JSON_FORWARDS_H_INCLUDED
 
 #if !defined(JSON_IS_AMALGAMATION)
+
 # include "config.h"
+
 #endif // if !defined(JSON_IS_AMALGAMATION)
 
-namespace Json
-{
+namespace Json {
 
     // writer.h
     class FastWriter;
+
     class StyledWriter;
 
     // reader.h
@@ -25,13 +27,21 @@ namespace Json
 
     // value.h
     typedef unsigned int ArrayIndex;
+
     class StaticString;
+
     class Path;
+
     class PathArgument;
+
     class Value;
+
     class ValueIteratorBase;
+
     class ValueIterator;
+
     class ValueConstIterator;
+
 #ifdef JSON_VALUE_USE_INTERNAL_MAP
     class ValueMapAllocator;
     class ValueInternalLink;

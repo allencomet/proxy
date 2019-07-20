@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+# profile files
+*.sconsign.dblite
+.vscode
+cmake-build-debug

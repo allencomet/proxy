@@ -11,88 +11,91 @@
 #include "../thread_util.h"
 
 
-#include <boost/smart_ptr.hpp>
-#include <boost/bind.hpp>
+#include <memory>
+#include <functional>
 
 DEC_uint32(timeout);  // timeout in ms for test cases
 DEC_bool(a);          // run all tests if true
 
 namespace cctest {
 
-void init_cctest(int argc, char** argv);
-
-void run_tests();
-
-const std::vector<std::string>& args();
-
-struct Test {
-    Test() {}
-    virtual ~Test() {}
-
-    virtual void run() = 0;
-
-    virtual const std::string& name() = 0;
-
-    virtual bool on() = 0;
-
-    DISALLOW_COPY_AND_ASSIGN(Test);
-};
-
-class TestRunner {
-  public:
-    TestRunner() {}
-    ~TestRunner() {}
-
-    void run_test(Test* test);
-
-  private:
-    void thread_fun() {
-        _test->run();
-        _ev.signal();
-    }
-
-    boost::scoped_ptr<Test> _test;
-    boost::scoped_ptr<safe::Thread> _thread;
-    safe::SyncEvent _ev;
-
-    DISALLOW_COPY_AND_ASSIGN(TestRunner);
-};
-
-struct Tests {
-    static Tests* instance() {
-        static Tests tests;
-        return &tests;
-    }
-
-    void add_test(Test* test) {
-        _tests.push_back(test);
-    }
+    void init_cctest(int argc, char **argv);
 
     void run_tests();
 
-    void set_args(const std::vector<std::string>& args) {
-        _args = args;
-    }
+    const std::vector<std::string> &args();
 
-    const std::vector<std::string>& get_args() const {
-        return _args;
-    }
+    struct Test {
+        Test() {}
 
-  private:
-    TestRunner _runner;     //将所有测试用例运行起来
-    std::vector<Test*> _tests;//各测试用例
-    std::vector<std::string> _args;//命令行参数列表
+        virtual ~Test() {}
 
-    Tests() {}
-    ~Tests() {}
-    DISALLOW_COPY_AND_ASSIGN(Tests);
-};
+        virtual void run() = 0;
 
-struct TestSaver {
-    TestSaver(Test* test) {
-        cctest::Tests::instance()->add_test(test);
-    }
-};
+        virtual const std::string &name() = 0;
+
+        virtual bool on() = 0;
+
+        DISALLOW_COPY_AND_ASSIGN(Test);
+    };
+
+    class TestRunner {
+    public:
+        TestRunner() {}
+
+        ~TestRunner() {}
+
+        void run_test(Test *test);
+
+    private:
+        void thread_fun() {
+            _test->run();
+            _ev.signal();
+        }
+
+        std::unique_ptr<Test> _test;
+        std::unique_ptr<safe::Thread> _thread;
+        safe::SyncEvent _ev;
+
+        DISALLOW_COPY_AND_ASSIGN(TestRunner);
+    };
+
+    struct Tests {
+        static Tests *instance() {
+            static Tests tests;
+            return &tests;
+        }
+
+        void add_test(Test *test) {
+            _tests.push_back(test);
+        }
+
+        void run_tests();
+
+        void set_args(const std::vector<std::string> &args) {
+            _args = args;
+        }
+
+        const std::vector<std::string> &get_args() const {
+            return _args;
+        }
+
+    private:
+        TestRunner _runner;     //将所有测试用例运行起来
+        std::vector<Test *> _tests;//各测试用例
+        std::vector<std::string> _args;//命令行参数列表
+
+        Tests() {}
+
+        ~Tests() {}
+        DISALLOW_COPY_AND_ASSIGN(Tests);
+    };
+
+    struct TestSaver {
+        TestSaver(Test *test) {
+            cctest::Tests::instance()->add_test(test);
+        }
+    };
 
 } // namespace cctest
 
@@ -166,7 +169,6 @@ inline void reset_color() {
         reset_color(); \
     }
 
-/*
 #define EXPECT_OP(_x_, _y_, _op_, _op_name_) \
 {\
     auto __x = _x_; auto __y = _y_; \
@@ -185,25 +187,7 @@ inline void reset_color() {
         reset_color(); \
     } \
 }
-*/
 
-#define EXPECT_OP(_x_, _y_, _op_, _op_name_) \
-{\
-    if (_x_ _op_ _y_) { \
-        set_green(); \
-        std::cout << "test " << name() << ": " << current_case() \
-            << "EXPECT_" << _op_name_ << "(" << #_x_ << ", " << #_y_ \
-            << ") ok" << std::endl; \
-        reset_color(); \
-        \
-    } else { \
-        set_red(); \
-        std::cout << "test " << name() << ": " << current_case() \
-            << "EXPECT_" << _op_name_ << "(" << #_x_ << ", " << #_y_ \
-            << ") failed: " << _x_ << " vs " << _y_ << std::endl; \
-        reset_color(); \
-    } \
-}
 
 #define EXPECT_EQ(_x_, _y_) EXPECT_OP(_x_, _y_, ==, "EQ")
 #define EXPECT_GE(_x_, _y_) EXPECT_OP(_x_, _y_, >=, "GE")

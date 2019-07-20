@@ -16,22 +16,23 @@
  *   ab.has('o');    // return false
  */
 class ascii_bitset {
-  public:
-	  ascii_bitset() {};
-	  ~ascii_bitset() {};
+public:
+    ascii_bitset() {};
 
-    explicit ascii_bitset(const std::string& s) {
-      #if __cpp_lambdas >= 200907
+    ~ascii_bitset() {};
+
+    explicit ascii_bitset(const std::string &s) {
+#if __cpp_lambdas >= 200907
         std::for_each(s.begin(), s.end(), [this](char c) { this->set(c); });
-      #else
+#else
         for (size_t i = 0; i < s.size(); ++i) {
             if (s[i] >= 0) this->set(s[i]);
         }
-      #endif
+#endif
     }
 
     void set(char c) {
-        if (c >= 0) _bits[c] = 1;		//c用作下标时会转换成ascii的值
+        if (c >= 0) _bits[c] = 1;
     }
 
     void unset(char c) {
@@ -46,10 +47,12 @@ class ascii_bitset {
         return !this->has(c);
     }
 
-  private:
-	ascii_bitset(const ascii_bitset &) {}
-	void operator=(const ascii_bitset&){}
-  private:
+private:
+    ascii_bitset(const ascii_bitset &) {}
+
+    void operator=(const ascii_bitset &) {}
+
+private:
     std::bitset<128> _bits;
 
     //DISALLOW_COPY_AND_ASSIGN(ascii_bitset);
@@ -66,23 +69,23 @@ class ascii_bitset {
  *   tab.get('z');  // return 7
  */
 class ascii_table {
-  public:
+public:
     ascii_table() {
         init();
     }
 
-    ascii_table(const std::map<char, int>& x){
-		init();
+    ascii_table(const std::map<char, int> &x) {
+        init();
         for (std::map<char, int>::const_iterator it = x.begin(); it != x.end(); ++it) {
             if (it->first >= 0) _table[it->first] = it->second;
         }
     }
 
-	~ascii_table() {};
+    ~ascii_table() {};
 
-	void init(){
-		_table.resize(128);
-	}
+    void init() {
+        _table.resize(128);
+    }
 
     void set(char c, int value) {
         if (c >= 0) _table[c] = value;
@@ -104,11 +107,12 @@ class ascii_table {
         return !this->has(c);
     }
 
-  private:
-	ascii_table(const ascii_table &){}
-	void operator=(const ascii_table&){}
+private:
+    ascii_table(const ascii_table &) {}
 
-  private:
+    void operator=(const ascii_table &) {}
+
+private:
     std::vector<int> _table;
 
     //DISALLOW_COPY_AND_ASSIGN(ascii_table);

@@ -17,7 +17,6 @@
 #include "../base/base.h"
 
 
-#include <boost/unordered_map.hpp>
-#include <boost/smart_ptr.hpp>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <unordered_map>
+#include <functional>
+#include <memory>

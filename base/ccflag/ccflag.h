@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace ccflag {
-namespace std = ::std;
+    namespace std = ::std;
 
 /*
  * parse command line flags
@@ -35,40 +35,40 @@ namespace std = ::std;
  *   # value of the flag can be modified at runtime, if line begins with '!'
  *   ! i32 = 4k        // -i32 = 4096
  */
-std::vector<std::string> init_ccflag(int argc, char** argv);
+    std::vector<std::string> init_ccflag(int argc, char **argv);
 
 /*
  * set value of flag @name to @value, return error info if failed.
  *
  *   set_flag_value("xx", "true"); ==> --xx=true
  */
-std::string set_flag_value(const std::string& name, const std::string& value);
+    std::string set_flag_value(const std::string &name, const std::string &value);
 
-namespace xx {
-namespace std = ::std;
-using std::string;
+    namespace xx {
+        namespace std = ::std;
+        using std::string;
 
-typedef ::int32_t int32;
-typedef ::int64_t int64;
-typedef ::uint32_t uint32;
-typedef ::uint64_t uint64;
+        typedef ::int32_t int32;
+        typedef ::int64_t int64;
+        typedef ::uint32_t uint32;
+        typedef ::uint64_t uint64;
 
-enum {
-    TYPE_bool,
-    TYPE_int32,
-    TYPE_int64,
-    TYPE_uint32,
-    TYPE_uint64,
-    TYPE_string,
-    TYPE_double
-};
+        enum {
+            TYPE_bool,
+            TYPE_int32,
+            TYPE_int64,
+            TYPE_uint32,
+            TYPE_uint64,
+            TYPE_string,
+            TYPE_double
+        };
 
-struct FlagSaver {
-    FlagSaver(const char* type_str, const char* name, const char* value,
-              const char* help, const char* file, void* addr, int type);
-};
+        struct FlagSaver {
+            FlagSaver(const char *type_str, const char *name, const char *value,
+                      const char *help, const char *file, void *addr, int type);
+        };
 
-}  // namespace xx
+    }  // namespace xx
 }  // namespace ccflag
 
 #define DECLARE_CCFLAG(type, name) \

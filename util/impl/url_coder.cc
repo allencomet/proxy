@@ -2,27 +2,29 @@
 
 namespace {
 
-class UrlCoder {
-  public:
-    UrlCoder();
-	~UrlCoder() {};
+    class UrlCoder {
+    public:
+        UrlCoder();
 
-    std::string decode(const std::string& src) const;
-    std::string encode(const std::string& src) const;
+        ~UrlCoder() {};
 
-    int hex2int(char c) const {
-        if (c >= '0' && c <= '9') return c - '0';
-        return ::tolower(c) - 'a' + 10;
-    }
+        std::string decode(const std::string &src) const;
 
-  private:
+        std::string encode(const std::string &src) const;
 
-  private:
-    ascii_bitset _uncoded;
-    ascii_bitset _hex;
+        int hex2int(char c) const {
+            if (c >= '0' && c <= '9') return c - '0';
+            return ::tolower(c) - 'a' + 10;
+        }
 
-    DISALLOW_COPY_AND_ASSIGN(UrlCoder);
-};
+    private:
+
+    private:
+        ascii_bitset _uncoded;
+        ascii_bitset _hex;
+
+        DISALLOW_COPY_AND_ASSIGN(UrlCoder);
+    };
 
 /*
  * reserved characters:  "!*'();:@&=+$,/?#[]"
@@ -32,122 +34,122 @@ class UrlCoder {
  * hex: 0-9 a-f A-F
  */
 
-UrlCoder::UrlCoder()
-    : _uncoded("-_.~!*'();:@&=+$,/?#[]") {
+    UrlCoder::UrlCoder()
+            : _uncoded("-_.~!*'();:@&=+$,/?#[]") {
 
-    for (int i = 'A'; i <= 'Z'; ++i) {
-        _uncoded.set(i);
-        _uncoded.set(i + 'a' - 'A');
-    }
-
-    for (int i = '0'; i <= '9'; ++i) {
-        _uncoded.set(i);
-        _hex.set(i);
-    }
-
-    for (int i = 'A'; i <= 'F'; ++i) {
-        _hex.set(i);
-        _hex.set(i + 'a' - 'A');
-    }
-}
-
-std::string UrlCoder::decode(const std::string& src) const {
-    std::string dst;
-    dst.reserve(src.size());
-
-    for (size_t i = 0; i < src.size(); ++i) {
-        // for uncoded character
-        if (_uncoded.has(src[i])) {
-            dst.push_back(src[i]);
-            continue;
+        for (int i = 'A'; i <= 'Z'; ++i) {
+            _uncoded.set(i);
+            _uncoded.set(i + 'a' - 'A');
         }
 
-        // ' ' may be encoded as '+'
-        if (src[i] == '+') {
-            dst.push_back(' ');
-            continue;
+        for (int i = '0'; i <= '9'; ++i) {
+            _uncoded.set(i);
+            _hex.set(i);
         }
 
-        // for encoded character: %xx
-        CHECK_EQ(src[i], '%');
-        CHECK_LT(i + 2, src.size());
-        CHECK(_hex.has(src[i + 1])) << static_cast<int>(src[i + 1]);
-        CHECK(_hex.has(src[i + 2])) << static_cast<int>(src[i + 2]);
-
-        int h4 = this->hex2int(src[i + 1]);
-        int l4 = this->hex2int(src[i + 2]);
-
-        char c = (h4 << 4) | l4;
-        dst.push_back(c);
-
-        i += 2;
+        for (int i = 'A'; i <= 'F'; ++i) {
+            _hex.set(i);
+            _hex.set(i + 'a' - 'A');
+        }
     }
 
-    return dst;
-}
+    std::string UrlCoder::decode(const std::string &src) const {
+        std::string dst;
+        dst.reserve(src.size());
+
+        for (size_t i = 0; i < src.size(); ++i) {
+            // for uncoded character
+            if (_uncoded.has(src[i])) {
+                dst.push_back(src[i]);
+                continue;
+            }
+
+            // ' ' may be encoded as '+'
+            if (src[i] == '+') {
+                dst.push_back(' ');
+                continue;
+            }
+
+            // for encoded character: %xx
+            CHECK_EQ(src[i], '%');
+            CHECK_LT(i + 2, src.size());
+            CHECK(_hex.has(src[i + 1])) << static_cast<int>(src[i + 1]);
+            CHECK(_hex.has(src[i + 2])) << static_cast<int>(src[i + 2]);
+
+            int h4 = this->hex2int(src[i + 1]);
+            int l4 = this->hex2int(src[i + 2]);
+
+            char c = (h4 << 4) | l4;
+            dst.push_back(c);
+
+            i += 2;
+        }
+
+        return dst;
+    }
 
 /*
  * todo: need encode reserved characters?
  */
-std::string UrlCoder::encode(const std::string& src) const {
-    std::string dst;
+    std::string UrlCoder::encode(const std::string &src) const {
+        std::string dst;
 
-    for (size_t i = 0; i < src.size(); ++i) {
-        if (_uncoded.has(src[i])) {
-            dst.push_back(src[i]);
-            continue;
+        for (size_t i = 0; i < src.size(); ++i) {
+            if (_uncoded.has(src[i])) {
+                dst.push_back(src[i]);
+                continue;
+            }
+
+            dst.push_back('%');
+            dst.push_back("0123456789ABCDEF"[static_cast<uint8>(src[i]) >> 4]);
+            dst.push_back("0123456789ABCDEF"[static_cast<uint8>(src[i]) & 0x0F]);
         }
 
-        dst.push_back('%');
-        dst.push_back("0123456789ABCDEF"[static_cast<uint8>(src[i]) >> 4]);
-        dst.push_back("0123456789ABCDEF"[static_cast<uint8>(src[i]) & 0x0F]);
+        return dst;
     }
 
-    return dst;
-}
-
-UrlCoder kUrlCoder;
+    UrlCoder kUrlCoder;
 
 } // namespace
 
 namespace util {
 
-std::string decode_url(const std::string& src) {
-    return kUrlCoder.decode(src);
-}
+    std::string decode_url(const std::string &src) {
+        return kUrlCoder.decode(src);
+    }
 
-std::string encode_url(const std::string& src) {
-    return kUrlCoder.encode(src);
-}
+    std::string encode_url(const std::string &src) {
+        return kUrlCoder.encode(src);
+    }
 
 } // namespace util
 
 
-//long GetBig5Count(char *str)//Èç¹û´Ëº¯Êý·µ»ØÖµ´óÓÚÁã,Ôò±íÃ÷´«ÈëµÄ×Ö·û´®¼«¿ÉÄÜÊÇ·±Ìå
+//long GetBig5Count(char *str)//ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½
 //{
-//	int lnBIG5 = 0;//ÓÃì¶Í³¼Æ¿ÉÄÜÊÇ·±Ìå×ÖµÄºº×Ö¸öÊý
-//	int lnGB = 0;//ÓÃì¶Í³¼Æ¿ÉÄÜÊÇ¼òÌå×ÖµÄºº×Ö¸öÊý
+//	int lnBIG5 = 0;//ï¿½ï¿½ï¿½Í³ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ÖµÄºï¿½ï¿½Ö¸ï¿½ï¿½ï¿½
+//	int lnGB = 0;//ï¿½ï¿½ï¿½Í³ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½Ç¼ï¿½ï¿½ï¿½ï¿½ÖµÄºï¿½ï¿½Ö¸ï¿½ï¿½ï¿½
 //	int liTranLen = strlen(str);
 //
 //	for (int liT = 0; liT<liTranLen - 1; liT++)
 //	{
-//		//Î²×Ö½Ú40-7EÊÇBGI5ÂëÌØÓÐµÄ,Èç¹ûÉ¨Ãèµ½ÕâÖÖ±àÂëËµÃ÷´Ë×ÖÔª´®ÊÇ·±Ìå(¾­²âÊÔ:ÓÐÀýÍâ,¿ÉÄÜÊÇºº×ÖµÄ×îááÒ»¸ö±àÂëÓëÓ¢ÎÄ±àÂë×éºÏ¶ø³ÉµÄ)
+//		//Î²ï¿½Ö½ï¿½40-7Eï¿½ï¿½BGI5ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½,ï¿½ï¿½ï¿½É¨ï¿½èµ½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½Çºï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¢ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½Ï¶ï¿½ï¿½Éµï¿½)
 //		if ((BYTE)(BYTE)str[liT] >= 161 && (BYTE)(BYTE)str[liT] <= 254 && (BYTE)(BYTE)str[liT + 1] >= 64 && (BYTE)(BYTE)str[liT + 1] <= 126)
 //			lnBIG5++;
 //
-//		//Ê××Ö½ÚA4-A9ÔÚGBÖÐÎªÈÕÎÄ¼ÙÃû,Ï£À°×ÖÄ¸,¶íÎÄ×ÖÄ¸ºÍÖÆ±í·û,Õý³£ÎÄ±¾ÖÐºÜÉÙ³öÏÖ,¶øÕâ¸ö·¶Î§ÊÇBIG5µÄ³£ÓÃºº×Ö,ËùÒÔÈÏÎªÕâÊÇBIG5Âë
+//		//ï¿½ï¿½ï¿½Ö½ï¿½A4-A9ï¿½ï¿½GBï¿½ï¿½Îªï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½,Ï£ï¿½ï¿½ï¿½ï¿½Ä¸,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½Æ±ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½Ðºï¿½ï¿½Ù³ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½BIG5ï¿½Ä³ï¿½ï¿½Ãºï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½BIG5ï¿½ï¿½
 //		if ((BYTE)(BYTE)str[liT] >= 164 && (BYTE)(BYTE)str[liT] <= 169 && (BYTE)(BYTE)str[liT + 1] >= 161 && (BYTE)(BYTE)str[liT + 1] <= 254)
 //			lnBIG5++;
 //
-//		//GBÖÐÊ××Ö½ÚAA-AFÃ»ÓÐ¶¨Òå,ËùÒÔÊ××Ö½ÚÎ»ì¶AA-AFÖ®¼ä,Î²×Ö½ÚÎ»ì¶A1-FEµÄ±àÂë¼¸ºõ100%ÊÇBIG5(¾­²âÊÔ:Ã»ÓÐ100%),ÈÏÎªÊÇBIG5Âë
+//		//GBï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½AA-AFÃ»ï¿½Ð¶ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½Î»ï¿½AA-AFÖ®ï¿½ï¿½,Î²ï¿½Ö½ï¿½Î»ï¿½A1-FEï¿½Ä±ï¿½ï¿½ë¼¸ï¿½ï¿½100%ï¿½ï¿½BIG5(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:Ã»ï¿½ï¿½100%),ï¿½ï¿½Îªï¿½ï¿½BIG5ï¿½ï¿½
 //		if ((BYTE)(BYTE)str[liT] >= 170 && (BYTE)(BYTE)str[liT] <= 175 && (BYTE)(BYTE)str[liT + 1] >= 161 && (BYTE)(BYTE)str[liT + 1] <= 254)
 //			lnBIG5++;
 //
-//		//Ê××Ö½ÚC6-D7,Î²×Ö½ÚA1-FEÔÚGBÖÐÊôì¶Ò»¼¶×Ö¿â,ÊÇ³£ÓÃºº×Ö,¶øÔÚBIG5ÖÐ,C6-C7Ã»ÓÐÃ÷È·¶¨Òå,µ«Í¨³£ÓÃÀ´·ÅÈÕÎÄ¼ÙÃûºÍÐòºÅ,C8-D7Êôì¶º±ÓÃºº×ÖÇø,ËùÒÔ¿ÉÈÏÎªÊÇGBÂë
+//		//ï¿½ï¿½ï¿½Ö½ï¿½C6-D7,Î²ï¿½Ö½ï¿½A1-FEï¿½ï¿½GBï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö¿ï¿½,ï¿½Ç³ï¿½ï¿½Ãºï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½BIG5ï¿½ï¿½,C6-C7Ã»ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,C8-D7ï¿½ï¿½ì¶ºï¿½ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Ô¿ï¿½ï¿½ï¿½Îªï¿½ï¿½GBï¿½ï¿½
 //		if ((BYTE)(BYTE)str[liT] >= 196 && (BYTE)(BYTE)str[liT] <= 215 && (BYTE)(BYTE)str[liT + 1] >= 161 && (BYTE)(BYTE)str[liT + 1] <= 254)
 //			lnGB++;
 //	}
 //
-//	//Èç¹ûÉ¨ÃèÍêÕû¸ö×ÖÔª´®,¿ÉÄÜÊÇ¼òÌå×ÖµÄÊýÄ¿±È¿ÉÄÜÊÇ·±Ìå×ÖµÄÊýÄ¿¶à¾ÍÈÏÎªÊÇ¼òÌå×Ö²»×ª¼ò(²»Ò»¶¨×¼È·)
+//	//ï¿½ï¿½ï¿½É¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½Ç¼ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½Ä¿ï¿½È¿ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Ç¼ï¿½ï¿½ï¿½ï¿½Ö²ï¿½×ªï¿½ï¿½(ï¿½ï¿½Ò»ï¿½ï¿½×¼È·)
 //	return lnBIG5 - lnGB;
 //}

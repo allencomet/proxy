@@ -21,27 +21,27 @@ DEC_int64(max_log_file_size);  // max log file size for LevelLog
 
 
 namespace cclog {
-namespace std = ::std;
+    namespace std = ::std;
 
 /*
  * @argv0  argv[0] or any valid string for a file name.
  */
-void init_cclog(const std::string& argv0);
+    void init_cclog(const std::string &argv0);
 
 /*
  * write all buffered logs to destination and stop the logging thread.
  */
-void close_cclog();
+    void close_cclog();
 
 /*
  * log_by_day("xx") ==> one log file per day for TLOG("xx")
  */
-void log_by_day(const char* tag);
+    void log_by_day(const char *tag);
 
 /*
  * log_by_hour("xx") ==> one log file per hour for TLOG("xx")
  */
-void log_by_hour(const char* tag);
+    void log_by_hour(const char *tag);
 
 /*
 * tagged-log
@@ -105,17 +105,17 @@ void log_by_hour(const char* tag);
         ::cclog::xx::FatalLogSaver(__FILE__, __LINE__, 3).sb() \
             << "check failed: " #ptr " mustn't be NULL! "
 
-//#define CHECK_OP(a, b, op) \
-   							   //    for (auto _x_ = std::make_pair(a, b); !(_x_.first op _x_.second);) \
-//        ::cclog::xx::FatalLogSaver(__FILE__, __LINE__, 3).sb() \
-//            << "check failed: " #a " " #op " " #b ", " \
-//            << _x_.first << " vs " << _x_.second
-
 #define CHECK_OP(a, b, op) \
-    if(!(a op b)) \
+    for (auto _x_ = std::make_pair(a, b); !(_x_.first op _x_.second);) \
         ::cclog::xx::FatalLogSaver(__FILE__, __LINE__, 3).sb() \
             << "check failed: " #a " " #op " " #b ", " \
-            << a << " vs " << b
+            << _x_.first << " vs " << _x_.second
+
+//#define CHECK_OP(a, b, op) \
+//    if(!(a op b)) \
+//        ::cclog::xx::FatalLogSaver(__FILE__, __LINE__, 3).sb() \
+//            << "check failed: " #a " " #op " " #b ", " \
+//            << a << " vs " << b
 
 #define CHECK_EQ(a, b) CHECK_OP(a, b, ==)
 #define CHECK_NE(a, b) CHECK_OP(a, b, !=)
@@ -124,153 +124,153 @@ void log_by_hour(const char* tag);
 #define CHECK_GT(a, b) CHECK_OP(a, b, >)
 #define CHECK_LT(a, b) CHECK_OP(a, b, <)
 
-namespace xx {
+    namespace xx {
 
 //标签style日志缓冲区
-class TaggedLog : public ::StreamBuf {
-  public:
-    TaggedLog(const char* type, int size)
-        : ::StreamBuf(size), _type(type) {
-    }
+        class TaggedLog : public ::StreamBuf {
+        public:
+            TaggedLog(const char *type, int size)
+                    : ::StreamBuf(size), _type(type) {
+            }
 
-	~TaggedLog() {}
+            ~TaggedLog() {}
 
-    const char* type() const {
-        return _type;
-    }
+            const char *type() const {
+                return _type;
+            }
 
-  private:
-    const char* _type;
-};
+        private:
+            const char *_type;
+        };
 
 //级别style日志缓冲区
-class LevelLog : public ::StreamBuf {
-public:
-	LevelLog(int type, int size)
-		: ::StreamBuf(size), _type(type) {
-	}
+        class LevelLog : public ::StreamBuf {
+        public:
+            LevelLog(int type, int size)
+                    : ::StreamBuf(size), _type(type) {
+            }
 
-	~LevelLog() {}
+            ~LevelLog() {}
 
-    int type() const {
-        return _type;
-    }
+            int type() const {
+                return _type;
+            }
 
-  private:
-    int _type;
-};
+        private:
+            int _type;
+        };
 
 //标签style日志存储器
-class TaggedLogSaver {
-  public:
-    TaggedLogSaver(const char* file, int line, const char* tag) {
-        _log = new TaggedLog(tag, 256);
-		(*_log) << ' ' << file << ':' << line << "] ";
-    }
+        class TaggedLogSaver {
+        public:
+            TaggedLogSaver(const char *file, int line, const char *tag) {
+                _log = new TaggedLog(tag, 256);
+                (*_log) << ' ' << file << ':' << line << "] ";
+            }
 
-    ~TaggedLogSaver();
+            ~TaggedLogSaver();
 
-    ::StreamBuf& sb() {
-        return *_log;
-    }
+            ::StreamBuf &sb() {
+                return *_log;
+            }
 
-  private:
-    TaggedLog* _log;
+        private:
+            TaggedLog *_log;
 
-    DISALLOW_COPY_AND_ASSIGN(TaggedLogSaver);
-};
+            DISALLOW_COPY_AND_ASSIGN(TaggedLogSaver);
+        };
 
 //标准错误输出缓冲区
-class CerrSaver {
-public:
-	CerrSaver() {}
+        class CerrSaver {
+        public:
+            CerrSaver() {}
 
-    ~CerrSaver() {
-        _sb << '\n';
-        ::fwrite(_sb.data(), 1, _sb.size(), stderr);
-    }
+            ~CerrSaver() {
+                _sb << '\n';
+                ::fwrite(_sb.data(), 1, _sb.size(), stderr);
+            }
 
-    ::StreamBuf& sb() {
-        return _sb;
-    }
+            ::StreamBuf &sb() {
+                return _sb;
+            }
 
-  private:
-    ::StreamBuf _sb;
+        private:
+            ::StreamBuf _sb;
 
-    DISALLOW_COPY_AND_ASSIGN(CerrSaver);
-};
+            DISALLOW_COPY_AND_ASSIGN(CerrSaver);
+        };
 
 //标准输出缓冲区
-class CoutSaver {
-  public:
-	  CoutSaver() {}
+        class CoutSaver {
+        public:
+            CoutSaver() {}
 
-    ~CoutSaver() {
-        _sb << '\n';
-        ::fwrite(_sb.data(), 1, _sb.size(), stdout);
-        ::fflush(stdout);
-    }
+            ~CoutSaver() {
+                _sb << '\n';
+                ::fwrite(_sb.data(), 1, _sb.size(), stdout);
+                ::fflush(stdout);
+            }
 
-    ::StreamBuf& sb() {
-        return _sb;
-    }
+            ::StreamBuf &sb() {
+                return _sb;
+            }
 
-  private:
-    ::StreamBuf _sb;
+        private:
+            ::StreamBuf _sb;
 
-    DISALLOW_COPY_AND_ASSIGN(CoutSaver);
-};
+            DISALLOW_COPY_AND_ASSIGN(CoutSaver);
+        };
 
 //级别style日志存储器
-class LevelLogSaver {
-  public:
-    LevelLogSaver(const char* file, int line, int type) {
-        _log = new LevelLog(type, 128);
-        (*_log) << ' ' << syscall(SYS_gettid) << ' ' << file << ':' << line
-                << "] ";
-    }
+        class LevelLogSaver {
+        public:
+            LevelLogSaver(const char *file, int line, int type) {
+                _log = new LevelLog(type, 128);
+                (*_log) << ' ' << syscall(SYS_gettid) << ' ' << file << ':' << line
+                        << "] ";
+            }
 
-	~LevelLogSaver() {}
+            ~LevelLogSaver() {}
 
-    ::StreamBuf& sb() {
-        return *_log;
-    }
+            ::StreamBuf &sb() {
+                return *_log;
+            }
 
-  protected:
-    LevelLog* _log;
+        protected:
+            LevelLog *_log;
 
-    DISALLOW_COPY_AND_ASSIGN(LevelLogSaver);
-};
+            DISALLOW_COPY_AND_ASSIGN(LevelLogSaver);
+        };
 
 //非致命级别日志存储器
-struct NonFatalLogSaver : public LevelLogSaver {
-    NonFatalLogSaver(const char* file, int line, int type)
-        : LevelLogSaver(file, line, type) {
-    }
+        struct NonFatalLogSaver : public LevelLogSaver {
+            NonFatalLogSaver(const char *file, int line, int type)
+                    : LevelLogSaver(file, line, type) {
+            }
 
-    ~NonFatalLogSaver() {
-        this->sb() << '\n';
-        this->push();
-    }
+            ~NonFatalLogSaver() {
+                this->sb() << '\n';
+                this->push();
+            }
 
-    void push();
-};
+            void push();
+        };
 
 //致命级别日志存储器
-struct FatalLogSaver : public LevelLogSaver {
-    FatalLogSaver(const char* file, int line, int type)
-        : LevelLogSaver(file, line, type) {
-    }
+        struct FatalLogSaver : public LevelLogSaver {
+            FatalLogSaver(const char *file, int line, int type)
+                    : LevelLogSaver(file, line, type) {
+            }
 
-    ~FatalLogSaver() {
-        this->sb() << '\n';
-        this->push();
-    }
+            ~FatalLogSaver() {
+                this->sb() << '\n';
+                this->push();
+            }
 
-    void push();
-};
+            void push();
+        };
 
-}  // namespace xx
+    }  // namespace xx
 }  // namespace cclog
 
 

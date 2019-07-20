@@ -19,182 +19,185 @@
 
 namespace net {
 
-inline uint16 hton16(uint16 v) {
-    return htobe16(v);
-}
+    inline uint16 hton16(uint16 v) {
+        return htobe16(v);
+    }
 
-inline uint32 hton32(uint32 v) {
-    return htobe32(v);
-}
+    inline uint32 hton32(uint32 v) {
+        return htobe32(v);
+    }
 
-inline uint64 hton64(uint64 v) {
-    return htobe64(v);
-}
+    inline uint64 hton64(uint64 v) {
+        return htobe64(v);
+    }
 
-inline uint16 ntoh16(uint16 v) {
-    return be16toh(v);
-}
+    inline uint16 ntoh16(uint16 v) {
+        return be16toh(v);
+    }
 
-inline uint32 ntoh32(uint32 v) {
-    return be32toh(v);
-}
+    inline uint32 ntoh32(uint32 v) {
+        return be32toh(v);
+    }
 
-inline uint64 ntoh64(uint64 v) {
-    return be64toh(v);
-}
+    inline uint64 ntoh64(uint64 v) {
+        return be64toh(v);
+    }
 
 /*
  * ip: big endian in network byte order
  */
-std::string ip_to_string(uint32 ip);
+    std::string ip_to_string(uint32 ip);
 
-uint32 string_to_ip(const std::string& ip);
+    uint32 string_to_ip(const std::string &ip);
 
-class sock_addr {
-  public:
-	  sock_addr() {};
-	  virtual ~sock_addr() {};
+    class sock_addr {
+    public:
+        sock_addr() {};
 
-    virtual const struct sockaddr* addr() const = 0;
-    virtual struct sockaddr* addr() = 0;
+        virtual ~sock_addr() {};
 
-    virtual uint32 size() const = 0;
+        virtual const struct sockaddr *addr() const = 0;
 
-    virtual std::string to_string() const = 0;
+        virtual struct sockaddr *addr() = 0;
 
-private:
-    DISALLOW_COPY_AND_ASSIGN(sock_addr);	//since c++11
-};
+        virtual uint32 size() const = 0;
 
-class ipv4_addr : public sock_addr {
-  public:
-    ipv4_addr() {
-        ::memset(&_addr, 0, sizeof(_addr));
-    }
+        virtual std::string to_string() const = 0;
 
-    /*
-     * if ip is empty or ip == "*", set s_addr to INADDR_ANY
-     */
-    ipv4_addr(const std::string& ip, uint32 port){
-		::memset(&_addr, 0, sizeof(_addr));
-        _addr.sin_family = AF_INET;
-        _addr.sin_port = net::hton16(static_cast<uint16>(port));
+    private:
+        DISALLOW_COPY_AND_ASSIGN(sock_addr);    //since c++11
+    };
 
-        if (!ip.empty() && ip != "*") {
-            _addr.sin_addr.s_addr = net::string_to_ip(ip);
-		}
-    }
-
-	virtual ~ipv4_addr() {}
-
-    virtual const struct sockaddr* addr() const {
-        return (struct sockaddr*) &_addr;
-    }
-
-    virtual struct sockaddr* addr() {
-        return (struct sockaddr*) &_addr;
-    }
-
-    virtual uint32 size() const {
-        return sizeof(_addr);
-    }
-
-    virtual std::string to_string() const {
-        return net::ip_to_string(_addr.sin_addr.s_addr) + ":" +
-               str::to_string(net::ntoh16(_addr.sin_port));
-    }
-
-  private:
-    struct sockaddr_in _addr;
-
-    DISALLOW_COPY_AND_ASSIGN(ipv4_addr);	//since c++11
-};
-
-class ipv6_addr : public sock_addr {
-  public:
-    ipv6_addr() {
-        ::memset(&_addr, 0, sizeof(_addr));
-    }
-
-    ipv6_addr(const std::string& ip, uint32 port) {
-		::memset(&_addr, 0, sizeof(_addr));
-        _addr.sin6_family = AF_INET6;
-        _addr.sin6_port = net::hton16(static_cast<uint16>(port));
-
-        if (!ip.empty() && ip != "*") {
-            int ret = ::inet_pton(AF_INET6, ip.c_str(), &_addr.sin6_addr);
-			CHECK_EQ(ret, 1) << "invalid ip: " << ip;
+    class ipv4_addr : public sock_addr {
+    public:
+        ipv4_addr() {
+            ::memset(&_addr, 0, sizeof(_addr));
         }
-    }
 
-	virtual ~ipv6_addr() {}
+        /*
+         * if ip is empty or ip == "*", set s_addr to INADDR_ANY
+         */
+        ipv4_addr(const std::string &ip, uint32 port) {
+            ::memset(&_addr, 0, sizeof(_addr));
+            _addr.sin_family = AF_INET;
+            _addr.sin_port = net::hton16(static_cast<uint16>(port));
 
-    virtual const struct sockaddr* addr() const {
-        return (struct sockaddr*) &_addr;
-    }
+            if (!ip.empty() && ip != "*") {
+                _addr.sin_addr.s_addr = net::string_to_ip(ip);
+            }
+        }
 
-    virtual struct sockaddr* addr() {
-        return (struct sockaddr*) &_addr;
-    }
+        virtual ~ipv4_addr() {}
 
-    virtual uint32 size() const {
-        return sizeof(_addr);
-    }
+        virtual const struct sockaddr *addr() const {
+            return (struct sockaddr *) &_addr;
+        }
 
-    virtual std::string to_string() const {
-        char s[INET6_ADDRSTRLEN] = { 0 };
-        inet_ntop(AF_INET6, &_addr.sin6_addr, s, sizeof(s));
+        virtual struct sockaddr *addr() {
+            return (struct sockaddr *) &_addr;
+        }
 
-        return std::string(s) + ":" +
-               str::to_string(net::ntoh16(_addr.sin6_port));
-    }
-  private:
-    struct sockaddr_in6 _addr;
+        virtual uint32 size() const {
+            return sizeof(_addr);
+        }
 
-    DISALLOW_COPY_AND_ASSIGN(ipv6_addr);
-};
+        virtual std::string to_string() const {
+            return net::ip_to_string(_addr.sin_addr.s_addr) + ":" +
+                   str::to_string(net::ntoh16(_addr.sin_port));
+        }
 
-class unix_addr : public sock_addr {
-  public:
-    unix_addr() {
-        ::memset(&_addr, 0, sizeof(_addr));
-    }
+    private:
+        struct sockaddr_in _addr;
 
-    unix_addr(const std::string& path) {
-		::memset(&_addr, 0, sizeof(_addr));
+        DISALLOW_COPY_AND_ASSIGN(ipv4_addr);    //since c++11
+    };
 
-        CHECK_LT(path.size(), sizeof(_addr.sun_path)) << "too long: " << path;
+    class ipv6_addr : public sock_addr {
+    public:
+        ipv6_addr() {
+            ::memset(&_addr, 0, sizeof(_addr));
+        }
 
-        _addr.sun_family = AF_UNIX;
-        _size = sizeof(_addr) - sizeof(_addr.sun_path) + path.size();
+        ipv6_addr(const std::string &ip, uint32 port) {
+            ::memset(&_addr, 0, sizeof(_addr));
+            _addr.sin6_family = AF_INET6;
+            _addr.sin6_port = net::hton16(static_cast<uint16>(port));
 
-        ::memcpy(_addr.sun_path, path.data(), path.size());
-    }
+            if (!ip.empty() && ip != "*") {
+                int ret = ::inet_pton(AF_INET6, ip.c_str(), &_addr.sin6_addr);
+                CHECK_EQ(ret, 1) << "invalid ip: " << ip;
+            }
+        }
 
-	~unix_addr() {}
+        virtual ~ipv6_addr() {}
 
-    virtual const struct sockaddr* addr() const {
-        return (struct sockaddr*) &_addr;
-    }
+        virtual const struct sockaddr *addr() const {
+            return (struct sockaddr *) &_addr;
+        }
 
-    virtual struct sockaddr* addr() {
-        return (struct sockaddr*) &_addr;
-    }
+        virtual struct sockaddr *addr() {
+            return (struct sockaddr *) &_addr;
+        }
 
-    virtual uint32 size() const {
-        return _size;
-    }
+        virtual uint32 size() const {
+            return sizeof(_addr);
+        }
 
-    virtual std::string to_string() const {
-        return std::string(_addr.sun_path);
-    }
+        virtual std::string to_string() const {
+            char s[INET6_ADDRSTRLEN] = {0};
+            inet_ntop(AF_INET6, &_addr.sin6_addr, s, sizeof(s));
 
-  private:
-    struct sockaddr_un _addr;
-    uint32 _size;
+            return std::string(s) + ":" +
+                   str::to_string(net::ntoh16(_addr.sin6_port));
+        }
 
-    DISALLOW_COPY_AND_ASSIGN(unix_addr);
-};
+    private:
+        struct sockaddr_in6 _addr;
+
+        DISALLOW_COPY_AND_ASSIGN(ipv6_addr);
+    };
+
+    class unix_addr : public sock_addr {
+    public:
+        unix_addr() {
+            ::memset(&_addr, 0, sizeof(_addr));
+        }
+
+        unix_addr(const std::string &path) {
+            ::memset(&_addr, 0, sizeof(_addr));
+
+            CHECK_LT(path.size(), sizeof(_addr.sun_path)) << "too long: " << path;
+
+            _addr.sun_family = AF_UNIX;
+            _size = sizeof(_addr) - sizeof(_addr.sun_path) + path.size();
+
+            ::memcpy(_addr.sun_path, path.data(), path.size());
+        }
+
+        ~unix_addr() {}
+
+        virtual const struct sockaddr *addr() const {
+            return (struct sockaddr *) &_addr;
+        }
+
+        virtual struct sockaddr *addr() {
+            return (struct sockaddr *) &_addr;
+        }
+
+        virtual uint32 size() const {
+            return _size;
+        }
+
+        virtual std::string to_string() const {
+            return std::string(_addr.sun_path);
+        }
+
+    private:
+        struct sockaddr_un _addr;
+        uint32 _size;
+
+        DISALLOW_COPY_AND_ASSIGN(unix_addr);
+    };
 
 //inline int epoll_create(int n = 10) {
 //	return  ::epoll_create(n);
@@ -213,42 +216,46 @@ class unix_addr : public sock_addr {
 //	}
 //}
 
-inline int tcp_socket() {
-	return ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	//return ::socket(AF_INET, SOCK_STREAM, 0);
-}
+    inline int tcp_socket() {
+        return ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        //return ::socket(AF_INET, SOCK_STREAM, 0);
+    }
 
-inline int udp_socket() {
-    return ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-}
+    inline int udp_socket() {
+        return ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    }
 
-inline int unix_socket() {
-	//return ::socket(AF_UNIX, SOCK_STREAM, IPPROTO_TCP);
-	return ::socket(AF_UNIX, SOCK_STREAM, 0);
-}
+    inline int unix_socket() {
+        //return ::socket(AF_UNIX, SOCK_STREAM, IPPROTO_TCP);
+        return ::socket(AF_UNIX, SOCK_STREAM, 0);
+    }
 
-bool connect(int sockfd, const sock_addr& server);
+    bool connect(int sockfd, const sock_addr &server);
 
 // bind sockfd to a specific ip or port
-bool bind(int sockfd, const sock_addr& addr);
+    bool bind(int sockfd, const sock_addr &addr);
 
-bool listen(int sockfd, int backlog = 128);
+    bool listen(int sockfd, int backlog = 128);
 
-bool setnonblocking(int sockfd);
+    bool setnonblocking(int sockfd);
 
-int accept(int sockfd, sock_addr* cli);
-int unixaccept(int sockfd, unix_addr &);
+    int accept(int sockfd, sock_addr *cli);
 
-int32 read(int fd, void* ptr, uint32 n);
-ssize_t readn(int fd, void *vptr, size_t n);
+    int unixaccept(int sockfd, unix_addr &);
 
-int32 write(int fd, const void* ptr, uint32 n);
-ssize_t writen(int fd,const void *vptr,size_t n);
+    int32 read(int fd, void *ptr, uint32 n);
 
-bool getsockname(int fd, sock_addr* addr);
-bool getpeername(int fd, sock_addr* addr);
+    ssize_t readn(int fd, void *vptr, size_t n);
 
-std::vector<std::string> get_ip_by_name(const std::string& name);
+    int32 write(int fd, const void *ptr, uint32 n);
+
+    ssize_t writen(int fd, const void *vptr, size_t n);
+
+    bool getsockname(int fd, sock_addr *addr);
+
+    bool getpeername(int fd, sock_addr *addr);
+
+    std::vector<std::string> get_ip_by_name(const std::string &name);
 
 } // namespace net
 

@@ -6,64 +6,66 @@
 
 namespace proxy {
 
-	class ConnManager;
+    class ConnManager;
 
-	namespace ipc {
+    namespace ipc {
 
-		class Dispatcher;
+        class Dispatcher;
 
-		class RequestHandler {
-		public:
-			RequestHandler(Dispatcher &epollcore, ConnManager &manager, int32 n = 4)
-				:_epollcore(epollcore), _connmanager(manager), _th_count(n) {
-			}
-			~RequestHandler() {
-				for (std::vector<ThreadPtr>::iterator it = _threads.begin();
-					it != _threads.end(); ++it) {
-					if (*it) {
-						(*it)->cancel();
-						(*it)->join();
-					}
-				}
-			}
+        class RequestHandler {
+        public:
+            RequestHandler(Dispatcher &epollcore, ConnManager &manager, int32 n = 4)
+                    : _epollcore(epollcore), _connmanager(manager), _th_count(n) {
+            }
 
-			void dispatcher(const request &req);
+            ~RequestHandler() {
+                for (std::vector<ThreadPtr>::iterator it = _threads.begin();
+                     it != _threads.end(); ++it) {
+                    if (*it) {
+                        (*it)->cancel();
+                        (*it)->join();
+                    }
+                }
+            }
 
-			void run() {
-				for (int16 i = 0; i < _th_count; ++i) {
-					ThreadPtr ptr(new safe::Thread(boost::bind(&RequestHandler::worker, this)));
-					_threads.push_back(ptr);
-					ptr->start();
-				}
-			}
-		private:
-			void handle_request(request &req);
+            void dispatcher(const request &req);
 
-			//handle request
-			void worker() {
-				LOG << "request handler worker running...";
-				for (;;) {
-					request req;
-					_tasks.pop(req);
-					handle_request(req);
-				}
-			}
+            void run() {
+                for (int16 i = 0; i < _th_count; ++i) {
+                    ThreadPtr ptr(new safe::Thread(std::bind(&RequestHandler::worker, this)));
+                    _threads.push_back(ptr);
+                    ptr->start();
+                }
+            }
 
+        private:
+            void handle_request(request &req);
 
-			Dispatcher &_epollcore;
-			ConnManager &_connmanager;	//连接管理器
-			std::vector<ThreadPtr> _threads;
-			int32 _th_count;
-
-			safe::block_queue<request> _tasks;
+            //handle request
+            void worker() {
+                LOG << "request handler worker running...";
+                for (;;) {
+                    request req;
+                    _tasks.pop(req);
+                    handle_request(req);
+                }
+            }
 
 
-			DISALLOW_COPY_AND_ASSIGN(RequestHandler);
-		};
+            Dispatcher &_epollcore;
+            ConnManager &_connmanager;    //连接管理器
+            std::vector<ThreadPtr> _threads;
+            int32 _th_count;
 
-		typedef boost::shared_ptr<RequestHandler> RequestHandlerPtr;
+            safe::block_queue<request> _tasks;
 
-	}//namespace ipc
+
+            DISALLOW_COPY_AND_ASSIGN(RequestHandler);
+        };
+
+        typedef std::shared_ptr<RequestHandler> RequestHandlerPtr;
+
+    }//namespace ipc
 }//namespace proxy
 
 

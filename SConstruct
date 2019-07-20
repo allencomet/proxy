@@ -1,7 +1,7 @@
 import os, sys, time
 from glob import glob
 
-ccflags = []
+ccflags = ['-std=c++11']
 
 if ARGUMENTS.get('release', '0') == '0':
   ccflags += ['-O2', '-g2', '-Werror', '-Wno-deprecated']	
