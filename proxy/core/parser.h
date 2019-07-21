@@ -5,65 +5,65 @@
 
 namespace proxy {
 
-    class PaserTool {
+    class ParseTool {
     public:
         typedef enum PASERSTATUS {
-            kPaserError,
-            kPaserInprogress,
-            kPaserHasdone,
-            kPaserHasleft
+            kParseError,
+            kParseInProgress,
+            kParseHasDone,
+            kParseHasLeft
         } PASERSTATUS;
 
-        static PASERSTATUS paser(StreamBuf &buf, request &req) {
-            if (buf.size() < 5) return kPaserInprogress;
+        static PASERSTATUS parse(StreamBuf &buf, request &req) {
+            if (buf.size() < 5) return kParseInProgress;
 
             if (0 == ::memcmp(buf.data(), g_kIPCTag.c_str(), 5)) {
                 if (buf.size() < g_kIPCLen) {
-                    return kPaserInprogress;
+                    return kParseInProgress;
                 } else {
                     IPCPACK *pack = (IPCPACK *) buf.data();
                     int32 expect_packlen = pack->body_len + g_kIPCLen;
                     if (expect_packlen < buf.size()) {
-                        return kPaserInprogress;
+                        return kParseInProgress;
                     } else {
                         req.type = kIpcPack;
                         ::memcpy(&req.ipc_pack, buf.data(), g_kIPCLen);
                         req.content.append(buf.data() + g_kIPCLen, pack->body_len);
                         buf.clear_head(expect_packlen);
-                        if (0 == buf.size()) return kPaserHasdone;
-                        else return kPaserHasleft;
+                        if (0 == buf.size()) return kParseHasDone;
+                        else return kParseHasLeft;
                     }
                 }
             } else if (0 == ::memcmp(buf.data(), g_kRPCTag.c_str(), 5)) {
                 if (buf.size() < g_kRPCLen) {
-                    return kPaserInprogress;
+                    return kParseInProgress;
                 } else {
                     RPCPACK *pack = (RPCPACK *) buf.data();
                     int32 expect_packlen = pack->body_len + g_kRPCLen;
                     if (expect_packlen < buf.size()) {
-                        return kPaserInprogress;
+                        return kParseInProgress;
                     } else {
                         req.type = kRpcPack;
                         ::memcpy(&req.rpc_pack, buf.data(), g_kRPCLen);
                         req.content.append(buf.data() + g_kRPCLen, pack->body_len);
                         buf.clear_head(expect_packlen);
-                        if (0 == buf.size()) return kPaserHasdone;
-                        else return kPaserHasleft;
+                        if (0 == buf.size()) return kParseHasDone;
+                        else return kParseHasLeft;
                     }
                 }
             } else {
-                return kPaserError;
+                return kParseError;
             }
 
 
         }
 
     private:
-        PaserTool() {}
+        ParseTool() {}
 
-        ~PaserTool() {}
+        ~ParseTool() {}
 
-        DISALLOW_COPY_AND_ASSIGN(PaserTool);
+        DISALLOW_COPY_AND_ASSIGN(ParseTool);
     };
 
 }//namespace epollthreadpool

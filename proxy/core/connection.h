@@ -88,8 +88,8 @@ namespace proxy {
 
     private:
         int32 _fd;
-        int64 _time;//last msg time
-        std::string _complete_addr;//保存完整地址，可能是网络地址，也可能是路径名
+        int64 _time;    // last msg time
+        std::string _complete_addr; //保存完整地址，可能是网络地址，也可能是路径名
 
 
         safe::Mutex _rmutex;

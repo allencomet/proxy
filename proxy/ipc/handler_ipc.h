@@ -53,7 +53,7 @@ namespace proxy {
 
 
             Dispatcher &_epollcore;
-            ConnManager &_connmanager;    //连接管理器
+            ConnManager &_connmanager;
             std::vector<ThreadPtr> _threads;
             int32 _th_count;
 

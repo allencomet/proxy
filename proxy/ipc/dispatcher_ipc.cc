@@ -72,21 +72,21 @@ namespace proxy {
                 request req;
                 req.fd = ptr->fd();
                 bool flag = false;
-                switch (PaserTool::paser(ptr->rbuf(), req)) {
-                    case PaserTool::kPaserError:
+                switch (ParseTool::parse(ptr->rbuf(), req)) {
+                    case ParseTool::kParseError:
                         close_client(ptr->fd());//从epoll中移除该描述符(标记为等待关闭的连接)
                         flag = true;//解析请求包出错，跳出for循环
                         status = false;//表示出错，外层不必继续往下处理
                         ELOG << "parser error";
                         break;
-                    case PaserTool::kPaserInprogress:
+                    case ParseTool::kParseInProgress:
                         flag = true;//缓冲区内数据不足一个包，跳出for循环继续接收数据
                         break;
-                    case PaserTool::kPaserHasdone:
+                    case ParseTool::kParseHasDone:
                         _request_handler->dispatcher(req);//将请求包放到请求队列
                         flag = true;//已经处理完所有请求，跳出for循环继续接收数据
                         break;
-                    case PaserTool::kPaserHasleft:
+                    case ParseTool::kParseHasLeft:
                         _request_handler->dispatcher(req);//将请求包放到请求队列
                         break;
                     default://unknow request,close connection

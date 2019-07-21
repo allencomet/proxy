@@ -22,11 +22,11 @@ namespace proxy {
         class RequestHandler {
         public:
             RequestHandler(Dispatcher &epollcore, ConnManager &front, ConnManager &back, int32 n = 4)
-                    : _epollcore(epollcore), _connmanager_front(front), _connmanager_back(back), _th_count(n) {
+                    : _epollcore(epollcore), _conn_mng_front(front), _conn_mng_back(back), _th_count(n) {
             }
 
             ~RequestHandler() {
-                for (std::vector<ThreadPtr>::iterator it = _threads.begin();
+                for (auto it = _threads.begin();
                      it != _threads.end(); ++it) {
                     if (*it) {
                         (*it)->cancel();
@@ -37,7 +37,7 @@ namespace proxy {
 
             void dispatcher(const request &req);
 
-            void back_reply_to_front(const request &req);//将后端服务器响应包转发给前端
+            void back_reply_to_front(const request &req);
 
             void run() {
                 for (int16 i = 0; i < _th_count; ++i) {
@@ -52,7 +52,7 @@ namespace proxy {
         private:
             void create_new_back_process(const request &req);
 
-            void handle_toback_request(request &req);//处理响应到后端的请求
+            void handle_2back_request(request &req);
             void handle_ipc_request(const request &req);
 
             void handle_rpc_request(const request &req);
@@ -61,13 +61,13 @@ namespace proxy {
 
             void handle_error_request(const request &req, int32 err, const std::string &msg);
 
-            void handle_unknow_request(const request &req);
+            void handle_unknown_request(const request &req);
 
             void handle_illegal_request(const request &req);
 
 
             void front_request_to_back(ConnectionPtr backptr, const request &req,
-                                       const std::string &userid = "");//将前端请求包转发到后端服务器
+                                       const std::string &userid = "");
 
             inline void save_back_path(const std::string &path) {
                 safe::MutexGuard g(_back_path_mtx);
@@ -77,25 +77,25 @@ namespace proxy {
 
             bool aux_inform_to_back(const std::string &, IPCPACK &);
 
-            //hnadle request
+            // handle request
             void worker() {
                 LOG << "request handler worker running...";
                 for (;;) {
                     request req;
                     _tasks.pop(req);
-                    handle_toback_request(req);
+                    handle_2back_request(req);
                 }
             }
 
 
             Dispatcher &_epollcore;
-            ConnManager &_connmanager_front;    //前端连接管理器
-            ConnManager &_connmanager_back;        //后端连接管理器
+            ConnManager &_conn_mng_front;    // a manager that processes front-end input requests
+            ConnManager &_conn_mng_back;     // a manager that processes back-end input requests
             std::vector<ThreadPtr> _threads;
             int32 _th_count;
 
             safe::Mutex _back_path_mtx;
-            std::set<std::string> _back_path;//后端服务器进程的地址
+            std::set<std::string> _back_path;
 
             safe::block_queue<request> _tasks;
 

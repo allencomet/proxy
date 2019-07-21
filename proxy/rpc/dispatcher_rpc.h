@@ -15,7 +15,7 @@ namespace proxy {
 
         class Dispatcher {
         public:
-            //RPC server
+            // RPC server
             explicit Dispatcher(const std::string &ip, const int16 &port)
                     : _ip(ip),
                       _port(port),
@@ -27,7 +27,7 @@ namespace proxy {
             }
 
             ~Dispatcher() {
-                inform_back_exit();
+                notify_back_exit();
 
                 if (_front_threadptr) {
                     _front_threadptr->cancel();
@@ -38,8 +38,6 @@ namespace proxy {
                     _back_threadptr->join();
                 }
             }
-
-            static int32 init_tcp_socket(const std::string &ip, const int16 &port);
 
             inline void set_listen_limit(int32 n) {
                 _listen_limit = n;
@@ -63,15 +61,18 @@ namespace proxy {
 
             void run();
 
-            friend class RequestHandler;//声明request_handler为友元类，允许访问私有成员
+            // allow to RequestHandler access the private members
+            friend class RequestHandler;
         private:
             void run_front();
 
             void run_back();
 
+            bool handle_request(ConnectionPtr ptr, bool is_front);
+
             bool handle_request_from_front(ConnectionPtr ptr);
 
-            bool handle_reply_from_back(ConnectionPtr ptr);
+            bool handle_response_from_back(ConnectionPtr ptr);
 
             void handle_accept_event(int32 fd);
 
@@ -91,11 +92,11 @@ namespace proxy {
 
             void init_socket_option(int32 fd);
 
-            void inform_back_exit();
+            void notify_back_exit();
 
             inline bool register_add_read_event_front(int32 fd) {
                 safe::MutexGuard g(_event_mtx_front);
-                _ev_front.events = EPOLLIN | EPOLLET;  //边缘触发模式
+                _ev_front.events = EPOLLIN | EPOLLET;  // ET
                 _ev_front.data.fd = fd;
                 if (epoll_ctl(_epfd_front, EPOLL_CTL_ADD, fd, &_ev_front) == -1) {
                     FLOG << "epoll_ctl error has been occurred: [" << errno << ":" << ::strerror(errno) << "]";
@@ -106,7 +107,7 @@ namespace proxy {
 
             inline bool register_add_read_event_back(int32 fd) {
                 safe::MutexGuard g(_event_mtx_back);
-                _ev_back.events = EPOLLIN | EPOLLET;  //边缘触发模式
+                _ev_back.events = EPOLLIN | EPOLLET;  // ET
                 _ev_back.data.fd = fd;
                 if (epoll_ctl(_epfd_back, EPOLL_CTL_ADD, fd, &_ev_back) == -1) {
                     FLOG << "epoll_ctl error has been occurred: [" << errno << ":" << ::strerror(errno) << "]";
@@ -159,8 +160,8 @@ namespace proxy {
                 return true;
             }
 
-            std::string _ip;//server ip
-            int16 _port;//server port
+            std::string _ip;    // server ip
+            int16 _port;        // server port
             int32 _listenfd;
             int32 _epfd_front;
             int32 _epfd_back;
@@ -169,20 +170,20 @@ namespace proxy {
             char _read_tmp_buf_front[MAXLINE];
             char _read_tmp_buf_back[MAXLINE];
 
-            RequestHandlerPtr _request_handler;//处理请求句柄
+            RequestHandlerPtr _request_handler;
 
-            ConnManager _connmanager_front;    //前端连接管理器
-            ConnManager _connmanager_back;    //后端连接管理器
-            ConnmapPtr _connmapptr;            //前后端映射管理器
+            ConnManager _connmanager_front;
+            ConnManager _connmanager_back;
+            ConnmapPtr _connmapptr;
 
             ThreadPtr _back_threadptr;
             ThreadPtr _front_threadptr;
 
-            safe::Mutex _event_mtx_front;//epoll非线程安全的，不能在多个线程去对事件增删改
+            safe::Mutex _event_mtx_front;   // epoll非线程安全的，不能在多个线程去对事件增删改
             struct epoll_event _ev_front;
             struct epoll_event _events_front[MAX_EVENTS];
 
-            safe::Mutex _event_mtx_back;//epoll非线程安全的，不能在多个线程去对事件增删改
+            safe::Mutex _event_mtx_back;    // epoll非线程安全的，不能在多个线程去对事件增删改
             struct epoll_event _ev_back;
             struct epoll_event _events_back[MAX_EVENTS];
 

@@ -3,10 +3,10 @@
 
 #include "../../util/util.h"
 
-DEC_uint32(thcount);        //the number of thread in server
-DEC_string(srvpath);        //ipc server bind address
-DEC_string(srvip);            //rpc server bind address
-DEC_uint32(srvport);        //server listen port
+DEC_uint32(thcount);        // the number of thread in server
+DEC_string(srvpath);        // ipc server bind address
+DEC_string(srvip);          // rpc server bind address
+DEC_uint32(srvport);        // server listen port
 
 DEC_uint32(conntype);
 DEC_string(remotepath);
@@ -27,7 +27,7 @@ namespace proxy {
             void run();
 
             void stop() {
-                for (std::vector<ThreadPtr>::iterator it = _threads.begin();
+                for (auto it = _threads.begin();
                      it != _threads.end(); ++it) {
                     if (*it) {
                         (*it)->cancel();
@@ -39,8 +39,8 @@ namespace proxy {
         private:
             void worker(int32 listenfd);
 
-            std::string _ip;//server ip
-            int16 _port;//server port
+            std::string _ip;
+            int16 _port;
             int32 _listenfd;
             std::vector<ThreadPtr> _threads;
 

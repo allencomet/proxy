@@ -13,22 +13,22 @@ namespace proxy {
 
         ~Connmap() {}
 
-        //find back connection by front fd
+        // find back connection by front fd
         ConnectionPtr back_connptr(int32 frontfd) {
-            ConnectionPtr connptr;
+            ConnectionPtr conn_ptr;
             safe::ReadLockGuard g(_fd_map_mtx);
-            std::unordered_map<int32, int32>::iterator it = _front2back_fd_map.find(frontfd);
+            auto it = _front2back_fd_map.find(frontfd);
             if (it != _front2back_fd_map.end()) {
-                connptr = _back.connection(it->second);
+                conn_ptr = _back.connection(it->second);
             }
-            return connptr;
+            return conn_ptr;
         }
 
-        //find front connection by back fd
+        // find front connection by back fd
         ConnectionPtr front_connptr(int32 backfd) {
             ConnectionPtr connptr;
             safe::ReadLockGuard g(_fd_map_mtx);
-            std::unordered_map<int32, int32>::iterator it = _back2front_fd_map.find(backfd);
+            auto it = _back2front_fd_map.find(backfd);
             if (it != _back2front_fd_map.end()) {
                 connptr = _front.connection(it->second);
             }
@@ -41,11 +41,11 @@ namespace proxy {
             _back2front_fd_map.insert(std::make_pair(back, front));
         }
 
-        void unassociate_by_front(int32 frontfd) {
+        void dissociate_by_front(int32 frontfd) {
             safe::WriteLockGuard g(_fd_map_mtx);
-            std::unordered_map<int32, int32>::iterator it = _front2back_fd_map.find(frontfd);
+            auto it = _front2back_fd_map.find(frontfd);
             if (it != _front2back_fd_map.end()) {
-                std::unordered_map<int32, int32>::iterator it2 = _back2front_fd_map.find(it->second);
+                auto it2 = _back2front_fd_map.find(it->second);
                 if (it2 != _back2front_fd_map.end()) {
                     _back.remove_conn(it2->first);
                     _back2front_fd_map.erase(it2);
@@ -55,11 +55,11 @@ namespace proxy {
             }
         }
 
-        void unassociate_by_back(int32 backfd) {
+        void dissociate_by_back(int32 backfd) {
             safe::WriteLockGuard g(_fd_map_mtx);
-            std::unordered_map<int32, int32>::iterator it = _back2front_fd_map.find(backfd);
+            auto it = _back2front_fd_map.find(backfd);
             if (it != _back2front_fd_map.end()) {
-                std::unordered_map<int32, int32>::iterator it2 = _front2back_fd_map.find(it->second);
+                auto it2 = _front2back_fd_map.find(it->second);
                 if (it2 != _front2back_fd_map.end()) {
                     _front.remove_conn(it2->first);
                     _front2back_fd_map.erase(it2);

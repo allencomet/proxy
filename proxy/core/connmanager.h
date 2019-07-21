@@ -48,7 +48,7 @@ namespace proxy {
 
         void check_invalid_conn();
 
-        //����һ���������࣬ͨ�������������ڲ���Ա
+
         class CMIterator {
         public:
             CMIterator(ConnManager &m) : _manager(m), _index(0) {}

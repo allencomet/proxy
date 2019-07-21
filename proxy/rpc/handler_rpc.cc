@@ -42,7 +42,7 @@ namespace proxy {
         //应包时会感知
         void RequestHandler::handle_inter_request(const request &req) {
             //将响应数据写入到这条连接的响应缓冲区里
-            ConnectionPtr connptr = _connmanager_front.connection(req.fd);
+            ConnectionPtr connptr = _conn_mng_front.connection(req.fd);
             if (!connptr) return;
 
             LOG << "received client[" << connptr->addr() << "]: function_number[" << req.rpc_pack.func_no
@@ -91,7 +91,7 @@ namespace proxy {
             ConnectionPtr backptr(new Connection(connfd, srvpath));
             backptr->set_msg_time(sys::utc.ms());
             //需要将新的连接添加到后端连接管理器以及前后端映射的map里
-            _connmanager_back.add_conn(connfd, backptr);
+            _conn_mng_back.add_conn(connfd, backptr);
             _epollcore._connmapptr->associate(req.fd, connfd);
             //将该连接注册到后端监听读事件
             _epollcore.register_add_read_event_back(connfd);
@@ -134,7 +134,7 @@ namespace proxy {
         }
 
         void RequestHandler::handle_error_request(const request &req, int32 err, const std::string &msg) {
-            ConnectionPtr connptr = _connmanager_front.connection(req.fd);
+            ConnectionPtr connptr = _conn_mng_front.connection(req.fd);
             if (!connptr) return;
             StreamBufPtr replyptr(new StreamBuf);
             LOG << "received client[" << connptr->addr() << "]: function_number[" << req.rpc_pack.func_no
@@ -153,7 +153,7 @@ namespace proxy {
             _epollcore.register_mod_rw_event_front(req.fd);
         }
 
-        void RequestHandler::handle_unknow_request(const request &req) {
+        void RequestHandler::handle_unknown_request(const request &req) {
             handle_error_request(req, kUnkowErrMsg.err_no, kUnkowErrMsg.err_msg);
         }
 
@@ -171,7 +171,7 @@ namespace proxy {
                     handle_rpc_request(req);//RPC包
                     break;
                 default:
-                    handle_unknow_request(req);
+                    handle_unknown_request(req);
                     break;
             }
         }
@@ -200,8 +200,8 @@ namespace proxy {
         }
 
         //处理响应到后端的请求
-        void RequestHandler::handle_toback_request(request &req) {
-            ConnectionPtr connptr = _connmanager_front.connection(req.fd);
+        void RequestHandler::handle_2back_request(request &req) {
+            ConnectionPtr connptr = _conn_mng_front.connection(req.fd);
             if (!connptr) return;
 
             switch (req.rpc_pack.func_no) {
@@ -252,8 +252,8 @@ namespace proxy {
 
             //如果客户连接已经关闭了，在这里连接也取不到，所以无法通知后端进程退出，只能在创建后端进程时保存下已经创建的后端进程的地址
             //然后再这里去通知后端进程退出
-            //WLOG << "inform backend exit,there are [" << _connmanager_back.size() << "] connection in pool";
-            //ConnManager::CMIterator iter(_connmanager_back);
+            //WLOG << "inform backend exit,there are [" << _conn_mng_back.size() << "] connection in pool";
+            //ConnManager::CMIterator iter(_conn_mng_back);
             //for (ConnectionPtr it = iter.begin(); !iter.end(); it = iter.next()) {
             //	if (it) {
             //		WLOG << "inform backend[" << it->addr() << "] to exit...";

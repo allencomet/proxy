@@ -4,66 +4,47 @@
 
 namespace proxy {
     namespace rpc {
-        int32 Dispatcher::init_tcp_socket(const std::string &ip, const int16 &port) {
-            int32 listenfd = net::tcp_socket();
-            net::setnonblocking(listenfd);
-            int32 optionVal = 0;
-            ::setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &optionVal, sizeof(optionVal));
-
-            FLOG_IF(listenfd < 0) << "crate tcp socket error has been occurred: [" << errno << ":" << ::strerror(errno)
-                                  << "]";
-
-            net::ipv4_addr localaddr(ip, port);
-            if (!net::bind(listenfd, localaddr)) {
-                return -1;
-            }
-
-            if (!net::listen(listenfd, 20)) {
-                return -1;
-            }
-
-            return listenfd;
-        }
 
         void Dispatcher::init(int32 listenfd) {
             _listenfd = listenfd;
 
             if (!os::path.exists("./bus/unixsock")) os::makedirs("./bus/unixsock");
-            //if (!os::path.exists("/tmp/ctp_proxy_server")) os::makedirs("/tmp/ctp_proxy_server");
 
-            //创建基于前端客户的事件反应堆
+            // create epoll for front events
             _epfd_front = ::epoll_create(_event_limit);
             if (_epfd_front == -1) {
                 FLOG << "epoll_create error has been occurred: [" << errno << ":" << ::strerror(errno) << "]";
             }
 
-            //创建基于与后端通信的事件反应堆
+            // create epoll for back events
             _epfd_back = ::epoll_create(_event_limit);
             if (_epfd_back == -1) {
                 FLOG << "epoll_create error has been occurred: [" << errno << ":" << ::strerror(errno) << "]";
             }
 
-            //将监听描述符注册到前端反应堆
+            // register to listen for client events
             _ev_front.events = EPOLLIN;
             _ev_front.data.fd = _listenfd;
             if (::epoll_ctl(_epfd_front, EPOLL_CTL_ADD, _listenfd, &_ev_front) == -1) {
                 FLOG << "epoll_ctl error has been occurred: [" << errno << ":" << ::strerror(errno) << "]";
             }
 
+            // initialize handler to handle requests
             _request_handler.reset(new RequestHandler(*this, _connmanager_front, _connmanager_back));
             _request_handler->run();
 
+            // create thread to handle front requests
             _front_threadptr.reset(new safe::Thread(std::bind(&Dispatcher::run_front, this)));
+            // create thread to handle fback responses
             _back_threadptr.reset(new safe::Thread(std::bind(&Dispatcher::run_back, this)));
         }
 
-        //Linux2.6版本之前还存在对于socket的accept的惊群现象,之后的版本已经解决掉了这个问题
-        //惊群是指多个进程/线程在等待同一资源时，每当资源可用，所有的进程/线程都来竞争资源的现象
+        // Linux2.6版本之前还存在对于socket的accept的惊群现象,之后的版本已经解决掉了这个问题
+        // 惊群是指多个进程/线程在等待同一资源时，每当资源可用，所有的进程/线程都来竞争资源的现象
         void Dispatcher::init() {
             _listenfd = net::tcp_socket();
 
             if (!os::path.exists("./bus/unixsock")) os::makedirs("./bus/unixsock");
-            //if (!os::path.exists("/tmp/ctp_proxy_server")) os::makedirs("/tmp/ctp_proxy_server");
 
             net::setnonblocking(_listenfd);
             int32 optionVal = 1;
@@ -73,19 +54,19 @@ namespace proxy {
             net::bind(_listenfd, localaddr);
             net::listen(_listenfd, _listen_limit);
 
-            //创建基于前端客户的事件反应堆
+            // create epoll for back events
             _epfd_front = ::epoll_create(_event_limit);
             if (_epfd_front == -1) {
                 FLOG << "epoll_create error has been occurred: [" << errno << ":" << ::strerror(errno) << "]";
             }
 
-            //创建基于与后端通信的事件反应堆
+            // create epoll for back events
             _epfd_back = ::epoll_create(_event_limit);
             if (_epfd_back == -1) {
                 FLOG << "epoll_create error has been occurred: [" << errno << ":" << ::strerror(errno) << "]";
             }
 
-            //将监听描述符注册到前端反应堆
+            // register to listen for client events
             _ev_front.events = EPOLLIN;
             _ev_front.data.fd = _listenfd;
             if (::epoll_ctl(_epfd_front, EPOLL_CTL_ADD, _listenfd, &_ev_front) == -1) {
@@ -95,76 +76,63 @@ namespace proxy {
             _request_handler.reset(new RequestHandler(*this, _connmanager_front, _connmanager_back));
             _request_handler->run();
 
+            // create thread to handle front requests
             _front_threadptr.reset(new safe::Thread(std::bind(&Dispatcher::run_front, this)));
+            // create thread to handle back responses
             _back_threadptr.reset(new safe::Thread(std::bind(&Dispatcher::run_back, this)));
         }
 
-        bool Dispatcher::handle_request_from_front(ConnectionPtr ptr) {
 
-            bool status = true;
+        bool Dispatcher::handle_request(ConnectionPtr ptr, bool is_front) {
+            bool do_next = true;
             for (;;) {
                 request req;
                 req.fd = ptr->fd();
-                bool flag = false;
-                switch (PaserTool::paser(ptr->rbuf(), req)) {
-                    case PaserTool::kPaserError:
-                        close_client_front(ptr->fd());//从epoll中移除该描述符(标记为等待关闭的连接)
-                        flag = true;//解析请求包出错，跳出for循环
-                        status = false;//表示出错，外层不必继续往下处理
-                        ELOG << "parser error";
+                bool stop_parse = false;
+                switch (ParseTool::parse(ptr->rbuf(), req)) {
+                    case ParseTool::kParseError:
+                        if (is_front) {
+                            close_client_front(ptr->fd());  // marked as stoppable
+                        } else {
+                            close_client_back(ptr->fd());   // marked as stoppable
+                        }
+                        stop_parse = true;      // parse error, stop handling next
+                        do_next = false;        // stop handling
+                        WLOG << "parser error";
                         break;
-                    case PaserTool::kPaserInprogress:
-                        flag = true;//缓冲区内数据不足一个包，跳出for循环继续接收数据
+                    case ParseTool::kParseInProgress:
+                        // buffer data is not enough for a complete package
+                        stop_parse = true;
                         break;
-                    case PaserTool::kPaserHasdone:
-                        _request_handler->dispatcher(req);//将请求包放到请求队列
-                        flag = true;//已经处理完所有请求，跳出for循环继续接收数据
+                    case ParseTool::kParseHasDone:
+                        // puts request was parsed into queue, and handle next
+                        _request_handler->dispatcher(req);
+                        stop_parse = true;  // there is no buffer data needs to parse
                         break;
-                    case PaserTool::kPaserHasleft:
-                        _request_handler->dispatcher(req);//将请求包放到请求队列
+                    case ParseTool::kParseHasLeft:
+                        // puts request was parsed into queue, and handle next
+                        _request_handler->dispatcher(req);
                         break;
-                    default://unknow request,close connection
-                        close_client_front(ptr->fd());//从epoll中移除该描述符(标记为等待关闭的连接)
+                    default:    // unknown request,close connection
+                        if (is_front) {
+                            close_client_front(ptr->fd());  // marked as stoppable
+                        } else {
+                            close_client_back(ptr->fd());   // marked as stoppable
+                        }
                         break;
                 }
 
-                if (flag) break;//跳出for循环
+                if (stop_parse) break;
             }
-            return status;
+            return do_next;
         }
 
-        //将消息传输给关联的前端客户
-        bool Dispatcher::handle_reply_from_back(ConnectionPtr ptr) {
-            bool status = true;
-            for (;;) {
-                request req;
-                req.fd = ptr->fd();
-                bool flag = false;
-                switch (PaserTool::paser(ptr->rbuf(), req)) {
-                    case PaserTool::kPaserError:
-                        close_client_back(ptr->fd());//从epoll中移除该描述符(标记为等待关闭的连接)
-                        flag = true;//解析请求包出错，跳出for循环
-                        status = false;//表示出错，外层不必继续往下处理
-                        ELOG << "parser error";
-                        break;
-                    case PaserTool::kPaserInprogress:
-                        flag = true;//缓冲区内数据不足一个包，跳出for循环继续接收数据
-                        break;
-                    case PaserTool::kPaserHasdone:
-                        _request_handler->dispatcher(req);//将请求包放到请求队列
-                        flag = true;//已经处理完所有请求，跳出for循环继续接收数据
-                        break;
-                    case PaserTool::kPaserHasleft:
-                        _request_handler->dispatcher(req);//将请求包放到请求队列
-                        break;
-                    default://unknow request,close connection
-                        close_client_back(ptr->fd());//从epoll中移除该描述符(标记为等待关闭的连接)
-                        break;
-                }
+        bool Dispatcher::handle_request_from_front(ConnectionPtr ptr) {
+            return handle_request(ptr, true);
+        }
 
-                if (flag) break;//跳出for循环
-            }
-            return status;
+        bool Dispatcher::handle_response_from_back(ConnectionPtr ptr) {
+            return handle_request(ptr, true);
         }
 
         void Dispatcher::handle_accept_event(int32 fd) {
@@ -241,7 +209,7 @@ namespace proxy {
                     LOG << "read " << n << " bytes data from backend(" << fd << ":" << connptr->fd() << ")";
                     connptr->set_msg_time(sys::utc.ms());
                     connptr->append_rbuf_ns(_read_tmp_buf_back, n);
-                    handle_reply_from_back(connptr);//处理后端响应的消息
+                    handle_response_from_back(connptr);//处理后端响应的消息
                 } else {
                     close_client_back(fd);
                 }
@@ -294,7 +262,7 @@ namespace proxy {
             ::close(fd);
             _connmanager_front.mark_death(fd);//标记为等待关闭的连接
 
-            _connmapptr->unassociate_by_front(fd);//解除前后端的关联
+            _connmapptr->dissociate_by_front(fd);//解除前后端的关联
         }
 
         void Dispatcher::close_client_back(int32 fd) {
@@ -305,7 +273,7 @@ namespace proxy {
             ::close(fd);
             _connmanager_back.mark_death(fd);//标记为等待关闭的连接
 
-            _connmapptr->unassociate_by_back(fd);//解除前后端的关联
+            _connmapptr->dissociate_by_back(fd);//解除前后端的关联
         }
 
         void Dispatcher::server_busy(int32 fd) {
@@ -313,7 +281,7 @@ namespace proxy {
             close_client_front(fd);
         }
 
-        void Dispatcher::inform_back_exit() {
+        void Dispatcher::notify_back_exit() {
             if (_request_handler) {
                 _request_handler->inform_back_exit();
             } else {
