@@ -1,6 +1,6 @@
 #include "ipc.h"
 
-#include "dispatcher_ipc.h"
+#include "dispatcher.h"
 
 namespace proxy {
     namespace ipc {

@@ -24,7 +24,7 @@ namespace proxy {
             void run();
 
             void stop() {
-                for (std::vector<ThreadPtr>::iterator it = _threads.begin();
+                for (auto it = _threads.begin();
                      it != _threads.end(); ++it) {
                     if (*it) {
                         (*it)->cancel();

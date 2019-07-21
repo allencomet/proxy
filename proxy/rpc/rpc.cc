@@ -1,6 +1,6 @@
 #include "rpc.h"
 
-#include "dispatcher_rpc.h"
+#include "dispatcher.h"
 
 namespace {
     int32 init_tcp_socket(const std::string &ip, const int16 &port) {

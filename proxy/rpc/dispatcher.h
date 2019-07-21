@@ -1,12 +1,15 @@
 #ifndef __PROXY_RPC_DIPATCHER_H
 #define __PROXY_RPC_DIPATCHER_H
 
+
 #include "../../util/util.h"
 #include "../core/protocol.h"
 #include "../core/connection.h"
 #include "../core/connmanager.h"
 #include "../core/connmap.h"
-#include "handler_rpc.h"
+
+#include "handler.h"
+
 
 #define MAX_EVENTS 10
 

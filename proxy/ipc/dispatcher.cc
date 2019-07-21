@@ -1,7 +1,7 @@
-#include "dispatcher_ipc.h"
+#include "dispatcher.h"
 
 #include "../core/parser.h"
-#include "handler_ipc.h"
+#include "handler.h"
 
 
 namespace proxy {

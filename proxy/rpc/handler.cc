@@ -1,8 +1,8 @@
-#include "handler_rpc.h"
+#include "handler.h"
 
 #include "../core/connection.h"
 #include "../core/connmanager.h"
-#include "dispatcher_rpc.h"
+#include "dispatcher.h"
 
 DEF_uint32(conntype, 0, "connection pool type: 0: one connection per client 1: create connection pool in advance");
 DEF_string(remotepath, "bus/unixsock/test", "remote server path");

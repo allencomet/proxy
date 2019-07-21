@@ -1,8 +1,8 @@
-#include "handler_ipc.h"
+#include "handler.h"
 
 #include "../core/connection.h"
 #include "../core/connmanager.h"
-#include "dispatcher_ipc.h"
+#include "dispatcher.h"
 
 namespace proxy {
     namespace ipc {
